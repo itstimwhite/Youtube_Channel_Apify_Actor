@@ -4,13 +4,13 @@ const utils = require('./utility.js');
 
 
 exports.getDataFromXpath = async(page, xPath, attrib) => {
-    await page.waitForXPath(xPath, { timeout: 120000 });
+    await page.waitForXPath(xPath, { timeout: 1200 });
     const xElement = await page.$x(xPath);
     return page.evaluate((el, key) => el[key], xElement[0], attrib);
 };
 
 exports.getDataFromSelector = async(page, slctr, attrib) => {
-    const slctrElem = await page.waitForSelector(slctr, { visible: true, timeout: 60000 });
+    const slctrElem = await page.waitForSelector(slctr, { visible: true, timeout: 600 });
     return page.evaluate((el, key) => el[key], slctrElem, attrib);
 };
 
