@@ -4,6 +4,9 @@
 
 // Import Apify SDK. For more information, see https://sdk.apify.com/
 const Apify = require('apify');
+const CONSTS = require('./consts');
+const utils = require('./utility.js');
+
 
 
 Apify.main(async() => {
@@ -26,15 +29,64 @@ Apify.main(async() => {
     const title = await page.title();
     console.log(`Title of the page "${input.url}" is "${title}".`);
 
+    //const channelName = document.querySelector('yt-formatted-string.style-scope.ytd-channel-name').innerText;
+
+    //Set Xpaths
+    channelNameXp = CONSTS.SELECTORS.channelNameXp;
+    channelSubscribersXp = CONSTS.SELECTORS.channelSubscribersXp;
+    joinedDateXp = CONSTS.SELECTORS.joinedDateXp;
+    totalViewCountXp = CONSTS.SELECTORS.totalViewCountXp;
+    channelLocationXp = CONSTS.SELECTORS.channelLocationXp;
+    channelDescriptionXp = CONSTS.SELECTORS.channelDescriptionXp;
+    channelProfileImageXp = CONSTS.SELECTORS.channelProfileImageXp;
+
     console.log('Begining data extraction')
-        // extract data from xpath
 
+    console.log(`searching for channel Name at ${channelNameXp}`);
+    const channelName = await utils.getDataFromXpath(page, channelNameXp, 'innerHTML')
+        .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelName-failed'));
+    console.log(`got channelName as ${channelName}`);
 
+    console.log(`searching for channel Subscribers at ${channelSubscribersXp}`);
+    const channelSubscribers = await utils.getDataFromXpath(page, channelSubscribersXp, 'innerHTML')
+        .catch((e) => handleErrorAndScreenshot(page, e, 'Getting-channelSubscribers-failed'));
+    console.log(`got channelSubscribers as ${channelSubscribers}`);
+
+    console.log(`searching for joined Date at ${joinedDateXp}`);
+    const joinedDate = await utils.getDataFromXpath(page, joinedDateXp, 'innerHTML')
+        .catch((e) => handleErrorAndScreenshot(page, e, 'Getting-joinedDate-failed'));
+    console.log(`got joinedDate as ${joinedDate}`);
+
+    console.log(`searching for totalViewCount at ${totalViewCountXp}`);
+    const totalViewCount = await utils.getDataFromXpath(page, totalViewCountXp, 'innerHTML')
+        .catch((e) => handleErrorAndScreenshot(page, e, 'Getting-totalViewCount-failed'));
+    console.log(`got totalViewCount as ${totalViewCount}`);
+
+    console.log(`searching for channel Location at ${channelLocationXp}`);
+    const channelLocation = await utils.getDataFromXpath(page, channelLocationXp, 'innerHTML')
+        .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelLocation-failed'));
+    console.log(`got channelLocation as ${channelLocation}`);
+
+    console.log(`searching for channel Description at ${channelDescriptionXp}`);
+    const channelDescription = await utils.getDataFromXpath(page, channelDescriptionXp, 'innerHTML')
+        .catch((e) => handleErrorAndScreenshot(page, e, 'Getting-channelDescription-failed'));
+    console.log(`got channelDescription as ${channelDescription}`);
+
+    console.log(`searching for channel Profile Image at ${channelProfileImageXp}`);
+    const channelProfileImage = await utils.getDataFromXpath(page, channelProfileImageXp, 'src')
+        .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelProfileImage-failed'));
+    console.log(`got channelProfileImage as ${channelProfileImage}`);
+
+    console.log('Finished data extraction')
 
 
     console.log('Saving output...');
     await Apify.setValue('OUTPUT', {
         title,
+        channelName,
+        channelSubscribers,
+        joinedDate,
+        totalViewCount
     });
 
     console.log('Closing Puppeteer...');
