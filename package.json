@@ -1,5 +1,5 @@
 {
-    "name": "Youtube Chnnel Scraper",
+    "name": "YouTube-Channel-Data-Scraper",
     "version": "0.0.1",
     "description": "This is an actor to scrape channel data from Youtube.",
     "dependencies": {
@@ -11,6 +11,6 @@
         "start": "node main.js",
         "test": "echo \"Error: oops, the actor has no tests yet, sad!\" && exit 1"
     },
-    "author": "It's not you it's me",
-    "license": "ISC"
+    "author": "Tim White",
+    "license": "MIT"
 }
