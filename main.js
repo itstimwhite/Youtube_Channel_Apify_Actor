@@ -5,7 +5,7 @@
 // Import Apify SDK. For more information, see https://sdk.apify.com/
 const Apify = require('apify');
 
-Apify.main(async () => {
+Apify.main(async() => {
     // Get input of the actor (here only for demonstration purposes).
     // If you'd like to have your input checked and have Apify display
     // a user interface for it, add INPUT_SCHEMA.json file to your actor.
@@ -26,8 +26,9 @@ Apify.main(async () => {
     console.log(`Title of the page "${input.url}" is "${title}".`);
 
     console.log('Begining data extraction')
-    exports.getVideoId = (videoUrl) => {
-    
+        // extract data from xpath
+    const channelName = await page.evaluate(('//*[@id="subscriber-count"]'));
+
 
 
     console.log('Saving output...');
