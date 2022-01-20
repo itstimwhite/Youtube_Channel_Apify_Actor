@@ -20,15 +20,18 @@ Apify.main(async() => {
 
     if (!input || !input.url) throw new Error('Input must be a JSON object with the "url" field!');
 
+    const inputModified = utils.appendAbout(input.url);
+    console.log(`Modified input is "${inputModified}".`);
+
     console.log('Launching Puppeteer...');
     const browser = await Apify.launchPuppeteer();
 
-    console.log(`Opening page ${input.url}...`);
+    console.log(`Opening page ${inputModified}...`);
     const page = await browser.newPage();
-    await page.goto(input.url);
+    await page.goto(inputModified);
 
     const title = await page.title();
-    console.log(`Title of the page "${input.url}" is "${title}".`);
+    console.log(`Title of the page "${inputModified}" is "${title}".`);
 
 
     //Set Xpaths
@@ -44,6 +47,7 @@ Apify.main(async() => {
     channelLink2Xp = CONSTS.SELECTORS.channelLink2Xp;
     channelLink3Xp = CONSTS.SELECTORS.channelLink3Xp;
     channelLink4Xp = CONSTS.SELECTORS.channelLink4Xp;
+    channelLinksXp = CONSTS.SELECTORS.channelLinksXp;
 
     console.log('Begining data extraction')
 
@@ -84,14 +88,25 @@ Apify.main(async() => {
         .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelProfileImage-failed'));
     console.log(`got channelProfileImage as ${channelProfileImage}`);
 
+    console.log(`searching for channel Links at ${channelLinksXp}`);
+    const channelLinks = await utils.getDataFromXpath(page, channelLinksXp, 'href')
+        .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelLinks-failed'));
+    console.log(`got channelLinks as ${channelLinks}`);
+
     console.log(`searching for channel Website at ${channelWebsiteXp}`);
     const channelWebsite = await utils.getDataFromXpath(page, channelWebsiteXp, 'href')
         .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelWebsite-failed'));
     console.log(`got channelWebsite as ${channelWebsite}`);
 
+    //  console.log(`searching for channel Link 1 at ${channelLink1Xp}`);
+    //const channelLink1 = await utils.getDataFromXpath(page, channelLink1Xp, 'href')
+    //  .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelLink1-failed'));
+    //console.log(`got channelLink1 as ${channelLink1}`);
+
     console.log(`searching for channel Link 1 at ${channelLink1Xp}`);
-    const channelLink1 = await utils.getDataFromXpath(page, channelLink1Xp, 'href')
+    const channelLink1Str = await utils.getDataFromXpath(page, channelLink1Xp, 'href')
         .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelLink1-failed'));
+    const channelLink1 = decodeURI(channelLink1Str);
     console.log(`got channelLink1 as ${channelLink1}`);
 
     console.log(`searching for channel Link 2 at ${channelLink2Xp}`);
@@ -109,19 +124,23 @@ Apify.main(async() => {
         .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelLink4-failed'));
     console.log(`got channelLink4 as ${channelLink4}`);
 
+    const channelURL = await input.url;
+    const channelProfileImageURL = channelProfileImage.url;
+
     console.log('Finished data extraction')
 
 
     console.log('Saving output...');
     await Apify.setValue('OUTPUT', {
-        title,
+        channelURL,
+        //title,
         channelName,
-        channelSubscribers,
+        channelSubscriberCount,
         joinedDate,
         totalViewCount,
         channelLocation,
         channelDescription,
-        channelProfileImage,
+        channelProfileImageURL,
         channelWebsite,
         channelLink1,
         channelLink2,
