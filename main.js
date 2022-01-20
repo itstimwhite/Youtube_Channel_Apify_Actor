@@ -42,6 +42,7 @@ Apify.main(async() => {
     channelLocationXp = CONSTS.SELECTORS.channelLocationXp;
     channelDescriptionXp = CONSTS.SELECTORS.channelDescriptionXp;
     channelProfileImageXp = CONSTS.SELECTORS.channelProfileImageXp;
+    channelVerifiedXp = CONSTS.SELECTORS.channelVerifiedXp;
     channelWebsiteXp = CONSTS.SELECTORS.channelWebsiteXp;
     channelLink1Xp = CONSTS.SELECTORS.channelLink1Xp;
     channelLink2Xp = CONSTS.SELECTORS.channelLink2Xp;
@@ -67,6 +68,18 @@ Apify.main(async() => {
         .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-totalViewCount-failed'));
     const totalViewCount = utils.unformatNumbers(totalViewCountStr);
     console.log(`got totalViewCount as ${totalViewCount}`);
+
+    console.log(`searching for verified at ${channelVerifiedXp}`);
+    const channelVerified = await utils.getDataFromXpath(page, channelVerifiedXp, 'innerHTML')
+        .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-verified-failed'));
+    console.log(`got channelVerified as ${channelVerified}`);
+
+    if (await (channelVerified) !==
+        null) console.log('Channel is verified');
+    else console.log('Channel is not verified');
+
+    if (await (channelVerified) !== null) { verified = true }
+
 
     console.log(`searching for joined Date at ${joinedDateXp}`);
     const joinedDate = await utils.getDataFromXpath(page, joinedDateXp, 'innerHTML')
@@ -141,11 +154,13 @@ Apify.main(async() => {
         channelLocation,
         channelDescription,
         channelProfileImageURL,
+        channelVerified,
         channelWebsite,
         channelLink1,
         channelLink2,
         channelLink3,
         channelLink4,
+        verified,
     });
 
     console.log('Closing Puppeteer...');
