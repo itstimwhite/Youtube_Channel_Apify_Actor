@@ -1,7 +1,8 @@
 # First, specify the base Docker image. You can read more about
 # the available images at https://sdk.apify.com/docs/guides/docker-images
 # You can also use any other image from Docker Hub.
-FROM apify/actor-node-puppeteer-chrome:17
+FROM apify/actor-node-puppeteer-chrome:16
+
 
 
 
