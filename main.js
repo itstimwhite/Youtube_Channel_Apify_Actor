@@ -49,6 +49,7 @@ Apify.main(async() => {
     channelLink3Xp = CONSTS.SELECTORS.channelLink3Xp;
     channelLink4Xp = CONSTS.SELECTORS.channelLink4Xp;
     channelLinksXp = CONSTS.SELECTORS.channelLinksXp;
+    socialLinksXp = CONSTS.SELECTORS.socialLinksXp;
 
     console.log('Begining data extraction')
 
@@ -69,7 +70,7 @@ Apify.main(async() => {
     const totalViewCount = utils.unformatNumbers(totalViewCountStr);
     console.log(`got totalViewCount as ${totalViewCount}`);
 
-    console.log(`searching for verified at ${channelVerifiedXp}`);
+    /*  console.log(`searching for verified at ${channelVerifiedXp}`);
     const channelVerified = await utils.getDataFromXpath(page, channelVerifiedXp, 'innerHTML')
         .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-verified-failed'));
     console.log(`got channelVerified as ${channelVerified}`);
@@ -79,7 +80,7 @@ Apify.main(async() => {
     else console.log('Channel is not verified');
 
     if (await (channelVerified) !== null) { verified = true }
-
+ */
 
     console.log(`searching for joined Date at ${joinedDateXp}`);
     const joinedDate = await utils.getDataFromXpath(page, joinedDateXp, 'innerHTML')
@@ -116,29 +117,46 @@ Apify.main(async() => {
     //  .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelLink1-failed'));
     //console.log(`got channelLink1 as ${channelLink1}`);
 
-    console.log(`searching for channel Link 1 at ${channelLink1Xp}`);
-    const channelLink1Str = await utils.getDataFromXpath(page, channelLink1Xp, 'href')
-        .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelLink1-failed'));
-    const channelLink1 = decodeURI(channelLink1Str);
-    console.log(`got channelLink1 as ${channelLink1}`);
+    /*   console.log(`searching for channel Link 1 at ${channelLink1Xp}`);
+      const channelLink1Str = await utils.getDataFromXpath(page, channelLink1Xp, 'href')
+          .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelLink1-failed'));
+      const channelLink1 = decodeURI(channelLink1Str);
+      console.log(`got channelLink1 as ${channelLink1}`);
 
-    console.log(`searching for channel Link 2 at ${channelLink2Xp}`);
-    const channelLink2 = await utils.getDataFromXpath(page, channelLink2Xp, 'href')
-        .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelLink2-failed'));
-    console.log(`got channelLink2 as ${channelLink2}`);
+      console.log(`searching for channel Link 2 at ${channelLink2Xp}`);
+      const channelLink2 = await utils.getDataFromXpath(page, channelLink2Xp, 'href')
+          .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelLink2-failed'));
+      console.log(`got channelLink2 as ${channelLink2}`);
 
-    console.log(`searching for channel Link 3 at ${channelLink3Xp}`);
-    const channelLink3 = await utils.getDataFromXpath(page, channelLink3Xp, 'href')
-        .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelLink3-failed'));
-    console.log(`got channelLink3 as ${channelLink3}`);
+      console.log(`searching for channel Link 3 at ${channelLink3Xp}`);
+      const channelLink3 = await utils.getDataFromXpath(page, channelLink3Xp, 'href')
+          .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelLink3-failed'));
+      console.log(`got channelLink3 as ${channelLink3}`);
 
-    console.log(`searching for channel Link 4 at ${channelLink4Xp}`);
-    const channelLink4 = await utils.getDataFromXpath(page, channelLink4Xp, 'href')
-        .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelLink4-failed'));
-    console.log(`got channelLink4 as ${channelLink4}`);
+      console.log(`searching for channel Link 4 at ${channelLink4Xp}`);
+      const channelLink4 = await utils.getDataFromXpath(page, channelLink4Xp, 'href')
+          .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelLink4-failed'));
+      console.log(`got channelLink4 as ${channelLink4}`); */
+
+    console.log(`searching for Social Links`);
+    const socialLinksHtml = await utils.getDataFromXpath(page, socialLinksXp, 'innerHTML')
+        .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-socialLinks-failed'));
+    console.log(`got socialLinks as ${socialLinksHtml}`);
+
+    socialHandles = Apify.utils.social.parseHandlesFromHtml(socialLinksHtml);
+    console.log(`got socialHandles as ${socialHandles}`);
+
+    // console.log(`searching for email.`);
+    // const channelEmail = utils.extractEmail(channelDescription);
+
+    //console.log(`Got email as ${channelEmail}`);
 
     const channelURL = await input.url;
     const channelProfileImageURL = channelProfileImage.url;
+
+    const channelEmail = Apify.utils.social.emailsFromText(channelDescription);
+    console.log(`Got email as ${channelEmail}`);
+
 
     console.log('Finished data extraction')
 
@@ -146,21 +164,17 @@ Apify.main(async() => {
     console.log('Saving output...');
     await Apify.setValue('OUTPUT', {
         channelURL,
-        //title,
         channelName,
+        channelEmail,
         channelSubscriberCount,
         joinedDate,
         totalViewCount,
         channelLocation,
         channelDescription,
         channelProfileImageURL,
-        channelVerified,
+        /*  channelVerified, */
         channelWebsite,
-        channelLink1,
-        channelLink2,
-        channelLink3,
-        channelLink4,
-        verified,
+        /*    socialHandles, */
     });
 
     console.log('Closing Puppeteer...');

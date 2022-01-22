@@ -4,16 +4,22 @@ const utils = require('./utility.js');
 
 
 exports.getDataFromXpath = async(page, xPath, attrib) => {
-    await page.waitForXPath(xPath, { timeout: 1200 });
+    await page.waitForXPath(xPath, { timeout: 120 });
     const xElement = await page.$x(xPath);
     return page.evaluate((el, key) => el[key], xElement[0], attrib);
 };
 
 exports.getDataFromSelector = async(page, slctr, attrib) => {
-    const slctrElem = await page.waitForSelector(slctr, { visible: true, timeout: 600 });
+    const slctrElem = await page.waitForSelector(slctr, { visible: true, timeout: 120 });
     return page.evaluate((el, key) => el[key], slctrElem, attrib);
 };
 
+//extract an email address from the page
+//use a regex to extract the email
+exports.extractEmail = (text) => {
+    const numberMatch = numStr.replace(/[^0-9,.]/ig, '');
+    te(/[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*/g)
+};
 
 exports.unformatNumbers = (numStr) => {
     const numberMatch = numStr.replace(/[^0-9,.]/ig, '');
@@ -61,22 +67,41 @@ exports.handleErrorAndScreenshot = async(page, e, errorName) => {
     //throw `Error: ${errorName} - Raw error: ${e.message}`;
 };
 
-//extract an email address from the page
-//use a regex to extract the email
-exports.extractEmail = async(page) => {
-    const email = await page.evaluate(() => {
-        const emailRegex = /[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*/g;
-        return emailRegex;
-    });
-};
+crawlFrames: async(page) => {
+        const socialHandles = {};
+        page.mainFrame().childFrames().forEach(async(item) => {
+            const html = await item.content();
+            let childSocialHandles = null;
+            const childParseData = {};
+            try {
+                childSocialHandles = Apify.utils.social.parseHandlesFromHtml(html, childParseData);
 
-//extract an instagram url from the page
-//use a regex to extract the url
-exports.extractInstagramUrl = async(page) => {
-    const html = await page.content();
-    const instagramUrl = html.match(/https:\/\/www\.instagram\.com\/[^/]+/g);
-    return instagramUrl;
-};
+                ['emails', 'phones', 'phonesUncertain', 'linkedIns', 'twitters', 'instagrams', 'facebooks'].forEach((field) => {
+                    socialHandles[field] = childSocialHandles[field];
+                });
+            } catch (e) {
+                log.info(e);
+            }
+        });
+
+
+        ['emails', 'phones', 'phonesUncertain', 'linkedIns', 'twitters', 'instagrams', 'facebooks'].forEach((field) => {
+            socialHandles[field] = _.uniq(socialHandles[field]);
+        });
+
+        return new Promise((resolve) => {
+            resolve(socialHandles);
+        });
+    },
+
+
+    //extract an instagram url from the page
+    //use a regex to extract the url
+    exports.extractInstagramUrl = async(page) => {
+        const html = await page.content();
+        const instagramUrl = html.match(/https:\/\/www\.instagram\.com\/[^/]+/g);
+        return instagramUrl;
+    };
 
 //extract a youtube url from the page
 //use a regex to extract the url
