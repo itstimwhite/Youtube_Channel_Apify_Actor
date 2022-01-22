@@ -1,12 +1,6 @@
 {
-    "name": "YouTube-Channel-Data-Scraper",
-    "version": "0.0.1",
-    "description": "This is an actor to scrape channel data from Youtube.",
     "dependencies": {
-        "apify": "^2.2.1",
-        "node": "^17.3.1"
-    },
-    "devDependencies": {
+        "apify": "^1.2.1",
         "puppeteer": "^5.3.1"
     },
     "scripts": {
