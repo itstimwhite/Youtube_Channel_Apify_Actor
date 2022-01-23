@@ -4,13 +4,14 @@
     "type": "object",
     "schemaVersion": 1,
     "properties": {
-        "startUrls": {
+        "input": {
             "title": "Start URLs",
             "type": "array",
             "description": "URLs to start with",
             "prefill": [
-                { "url": "http://example.com" },
-                { "url": "http://example.com/some-path" }
+                { "url": "http://youtube.com/user/itstimwhite" },
+                { "url": "http://youtube.com/c/timwhite" },
+                { "url": "http://youtube.com/timwhite" }
             ],
             "editor": "requestListSources"
         },
