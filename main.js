@@ -3,6 +3,7 @@
 // so that it can be started by running "npm start".
 
 // Import Apify SDK. For more information, see https://sdk.apify.com/
+const { PseudoUrl, RequestQueue } = require('apify');
 const Apify = require('apify');
 const CONSTS = require('./consts');
 const utils = require('./utility.js');
@@ -50,6 +51,7 @@ Apify.main(async() => {
     channelLink4Xp = CONSTS.SELECTORS.channelLink4Xp;
     channelLinksXp = CONSTS.SELECTORS.channelLinksXp;
     socialLinksXp = CONSTS.SELECTORS.socialLinksXp;
+    leftColumnXp = CONSTS.SELECTORS.leftColumnXp;
 
     console.log('Begining data extraction')
 
@@ -102,60 +104,100 @@ Apify.main(async() => {
         .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelProfileImage-failed'));
     console.log(`got channelProfileImage as ${channelProfileImage}`);
 
-    console.log(`searching for channel Links at ${channelLinksXp}`);
-    const channelLinks = await utils.getDataFromXpath(page, channelLinksXp, 'href')
-        .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelLinks-failed'));
-    console.log(`got channelLinks as ${channelLinks}`);
+    /*     console.log(`searching for channel Links at ${channelLinksXp}`);
+        const channelLinks = await utils.getDataFromXpath(page, channelLinksXp, 'innerHTML')
+            .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelLinks-failed'));
+        console.log(`got channelLinks as ${channelLinks}`); */
 
-    console.log(`searching for channel Website at ${channelWebsiteXp}`);
-    const channelWebsite = await utils.getDataFromXpath(page, channelWebsiteXp, 'href')
-        .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelWebsite-failed'));
-    console.log(`got channelWebsite as ${channelWebsite}`);
 
-    //  console.log(`searching for channel Link 1 at ${channelLink1Xp}`);
-    //const channelLink1 = await utils.getDataFromXpath(page, channelLink1Xp, 'href')
-    //  .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelLink1-failed'));
-    //console.log(`got channelLink1 as ${channelLink1}`);
+    /*     const socialHandles = await Apify.utils.social.getSocialHandles(page, channelLinks); */
 
-    /*   console.log(`searching for channel Link 1 at ${channelLink1Xp}`);
-      const channelLink1Str = await utils.getDataFromXpath(page, channelLink1Xp, 'href')
-          .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelLink1-failed'));
-      const channelLink1 = decodeURI(channelLink1Str);
-      console.log(`got channelLink1 as ${channelLink1}`);
 
-      console.log(`searching for channel Link 2 at ${channelLink2Xp}`);
-      const channelLink2 = await utils.getDataFromXpath(page, channelLink2Xp, 'href')
-          .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelLink2-failed'));
-      console.log(`got channelLink2 as ${channelLink2}`);
 
-      console.log(`searching for channel Link 3 at ${channelLink3Xp}`);
-      const channelLink3 = await utils.getDataFromXpath(page, channelLink3Xp, 'href')
-          .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelLink3-failed'));
-      console.log(`got channelLink3 as ${channelLink3}`);
 
-      console.log(`searching for channel Link 4 at ${channelLink4Xp}`);
-      const channelLink4 = await utils.getDataFromXpath(page, channelLink4Xp, 'href')
-          .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelLink4-failed'));
-      console.log(`got channelLink4 as ${channelLink4}`); */
 
-    console.log(`searching for Social Links`);
-    const socialLinksHtml = await utils.getDataFromXpath(page, socialLinksXp, 'innerHTML')
-        .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-socialLinks-failed'));
-    console.log(`got socialLinks as ${socialLinksHtml}`);
+    /*  //get all urls from the page
+     const allUrls = await page.evaluate(() => {
+         const anchors = Array.from(document.querySelectorAll('a'));
+         return anchors.map(anchor => anchor.href);
+     });
+     console.log(`got allUrls as ${allUrls}`); */
 
-    socialHandles = Apify.utils.social.parseHandlesFromHtml(socialLinksHtml);
-    console.log(`got socialHandles as ${socialHandles}`);
 
-    // console.log(`searching for email.`);
-    // const channelEmail = utils.extractEmail(channelDescription);
+    //get all urls from the page
+    const allUrls = await page.evaluate(() => {
+        const anchors = Array.from(document.querySelectorAll('a'));
+        return anchors.map(anchor => anchor.href);
+    });
+    console.log(`got allUrls as ${allUrls}`);
 
-    //console.log(`Got email as ${channelEmail}`);
+    const redirectUrls = Array.from(allUrls);
+    console.log(`got redirectUrls as ${redirectUrls}`);
+    //search for 'q' in the url in the array allUrls and output it to redirectUrls2
+    const redirectUrls2 = redirectUrls.filter(url => url.includes('q='));
+    console.log(`got redirectUrls2 as ${redirectUrls2}`);
+
+    //get the value of the 'q' parameter from the url in the array redirectUrls2
+    const redirectUrls3 = redirectUrls2.map(url => url.split('q=')[1]);
+    console.log(`got redirectUrls3 as ${redirectUrls3}`);
+
+    //decode the urls in the array redirectUrls3 and output it to redirectUrls4
+    const redirectUrls4 = redirectUrls3.map(url => decodeURIComponent(url));
+    console.log(`got redirectUrls4 as ${redirectUrls4}`);
+
+    //dedupe the urls in the array redirectUrls4 and output it to redirectUrls5
+    const redirectUrls5 = Array.from(new Set(redirectUrls4));
+    console.log(`got redirectUrls5 as ${redirectUrls5}`);
+
+
+
+    //if a url in the array redirectUrls5 contains 'youtube' put it in a new array called youtubeUrls else put it in a new array called otherUrls
+    const youtubeUrls = redirectUrls5.filter(url => url.includes('youtube')); //youtubeUrls is an array of urls that contain 'youtube'
+    console.log(`got youtubeUrls as ${youtubeUrls}`);
+
+    //if a url in the array redirectUrls5 contains 'instagram' put it in a new array called instagramUrls
+    const instagramUrls = redirectUrls5.filter(url => url.includes('instagram')); //instagramUrls is an array of urls that contain 'instagram'
+
+    //if a url in the array redirectUrls5 contains 'twitter' put it in a new array called twitterUrls
+    const twitterUrls = redirectUrls5.filter(url => url.includes('twitter')); //twitterUrls is an array of urls that contain 'twitter'
+
+    //if a url in the array redirectUrls5 contains 'facebook' put it in a new array called facebookUrls
+    const facebookUrls = redirectUrls5.filter(url => url.includes('facebook')); //facebookUrls is an array of urls that contain 'facebook'
+
+    //if a url in the array redirectUrls5 contains 'linkedin' put it in a new array called linkedinUrls
+    const linkedinUrls = redirectUrls5.filter(url => url.includes('linkedin')); //linkedinUrls is an array of urls that contain 'linkedin'
+
+    //if a url in the array redirectUrls5 contains 'pinterest' put it in a new array called pinterestUrls
+    const pinterestUrls = redirectUrls5.filter(url => url.includes('pinterest')); //pinterestUrls is an array of urls that contain 'pinterest'
+
+    //if a url in the array redirectUrls5 contains 'reddit' put it in a new array called redditUrls
+    const redditUrls = redirectUrls5.filter(url => url.includes('reddit')); //redditUrls is an array of urls that contain 'reddit'
+
+    //if a url in the array redirectUrls5 contains 'tumblr' put it in a new array called tumblrUrls
+    const tumblrUrls = redirectUrls5.filter(url => url.includes('tumblr')); //tumblrUrls is an array of urls that contain 'tumblr'
+
+    //if a url in the array contains 'tiktok' put it in a new array called tiktokUrls
+    const tiktokUrls = redirectUrls5.filter(url => url.includes('tiktok')); //tiktokUrls is an array of urls that contain 'tiktok'
+
+    //if a url in the array contains 'twitch' put it in a new array called twitchUrls
+    const twitchUrls = redirectUrls5.filter(url => url.includes('twitch')); //twitchUrls is an array of urls that contain 'twitch'
+
+    //if a url in the array contains 'onlyfans' put it in a new array called onlyfansUrls
+    const onlyfansUrls = redirectUrls5.filter(url => url.includes('onlyfans')); //onlyfansUrls is an array of urls that contain 'onlyfans'
+
+
+
 
     const channelURL = await input.url;
-    const channelProfileImageURL = channelProfileImage.url;
+    const channelProfileImageURL = await channelProfileImage.url;
 
-    const channelEmail = Apify.utils.social.emailsFromText(channelDescription);
+    console.log(`Searching for channel Email in description`);
+    const channelEmail = await Apify.utils.social.emailsFromText(channelDescription);
     console.log(`Got email as ${channelEmail}`);
+
+    console.log(`Searching for channel Phone in description`);
+    const channelPhone = await Apify.utils.social.phonesFromText(channelDescription);
+    console.log(`Got phone as ${channelPhone}`);
 
 
     console.log('Finished data extraction')
@@ -166,15 +208,32 @@ Apify.main(async() => {
         channelURL,
         channelName,
         channelEmail,
+        channelPhone,
         channelSubscriberCount,
         joinedDate,
         totalViewCount,
         channelLocation,
         channelDescription,
         channelProfileImageURL,
+        social,
+        youtubeUrls,
+        instagramUrls,
+        twitterUrls,
+        facebookUrls,
+        linkedinUrls,
+        pinterestUrls,
+        redditUrls,
+        tumblrUrls,
+        tiktokUrls,
+        twitchUrls,
+        onlyfansUrls,
+
+        /*   channelLink1, */
         /*  channelVerified, */
-        channelWebsite,
+        /*    channelWebsite, */
         /*    socialHandles, */
+        redirectUrls5,
+        /*     socialHandles, */
     });
 
     console.log('Closing Puppeteer...');

@@ -1,14 +1,28 @@
 {
   "channelURL": [
-    "https://www.youtube.com/channel/UCurvGMZbdcQRPreyWuho4YA"
+    "https://www.youtube.com/c/alexis"
   ],
-  "channelName": "Уходом единым",
-  "channelEmail": [
-    "yulyanosevich@gmail.com"
-  ],
-  "channelSubscriberCount": 2800,
-  "joinedDate": "Sep 4, 2021",
-  "totalViewCount": 49755,
-  "channelLocation": "Russia",
-  "channelDescription": "Привет, друзья! Добро пожаловать на мой канал🤍\n\nМеня зовут Юля Носевич и с 2020 года я веду телеграм-канал \"Уходом единым\", где рассказываю об уходовой и декоративной косметике. С недавнего времени я начала снимать и видео для YouTube, чтобы вы могли меня не только читать, но и смотреть🤓\n\nЖелаю приятного просмотра!\n\nСвязаться со мной можно по электронной почте: yulyanosevich@gmail.com"
+  "channelName": "Alexis Ren",
+  "channelEmail": [],
+  "channelPhone": [],
+  "channelSubscriberCount": 1070000,
+  "joinedDate": "Sep 26, 2011",
+  "totalViewCount": 74468877,
+  "channelLocation": "United States",
+  "channelDescription": "The official YouTube channel of Alexis Ren",
+  "social": {
+    "emails": [],
+    "phones": [],
+    "phonesUncertain": [],
+    "linkedIns": [],
+    "twitters": [],
+    "instagrams": [],
+    "facebooks": [],
+    "youtubes": []
+  },
+  "redirectUrls5": [
+    "https://www.instagram.com/alexisren",
+    "https://twitter.com/alexisren",
+    "https://www.facebook.com/alexisrenofficial/"
+  ]
 }

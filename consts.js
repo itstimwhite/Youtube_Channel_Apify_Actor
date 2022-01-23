@@ -8,12 +8,14 @@ exports.SELECTORS = {
     channelProfileImageXp: '//*[@id="avatar"]/img',
     channelVerifiedXp: '//[@id="upload-info"]/ytd-channel-name/ytd-badge-supported-renderer/div[1]/@aria-label',
     channelWebsiteXp: '//*[@id="primary-links"]/a/div/yt-formatted-string',
-    channelLink1Xp: '//*[@id="secondary-links"]/a[1]',
-    channelLink2Xp: '//*[@id="secondary-links"]/a[2]',
-    channelLink3Xp: '//*[@id="secondary-links"]/a[3]',
-    channelLink4Xp: '//*[@id="secondary-links"]/a[4]',
+    channelLink1Xp: '//*[@id="link-list-container"]/a[1]/div/yt-formatted-string',
+    channelLink2Xp: '//*[@id="link-list-container"]/a[2]/div/yt-formatted-string',
+    channelLink3Xp: '//*[@id="link-list-container"]/a[3]/div/yt-formatted-string',
+    channelLink4Xp: '//*[@id="link-list-container"]/a[4]/div/yt-formatted-string',
+
     channelLinksXp: '//*[@id="link-list-container"]',
-    socialLinksXp: '//*[@id="link-list-container"]'
+    leftColumnXp: '//*[@id="left-column"]',
+
 
 
 
