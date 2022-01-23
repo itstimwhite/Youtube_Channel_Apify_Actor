@@ -104,24 +104,6 @@ Apify.main(async() => {
         .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelProfileImage-failed'));
     console.log(`got channelProfileImage as ${channelProfileImage}`);
 
-    /*     console.log(`searching for channel Links at ${channelLinksXp}`);
-        const channelLinks = await utils.getDataFromXpath(page, channelLinksXp, 'innerHTML')
-            .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelLinks-failed'));
-        console.log(`got channelLinks as ${channelLinks}`); */
-
-
-    /*     const socialHandles = await Apify.utils.social.getSocialHandles(page, channelLinks); */
-
-
-
-
-
-    /*  //get all urls from the page
-     const allUrls = await page.evaluate(() => {
-         const anchors = Array.from(document.querySelectorAll('a'));
-         return anchors.map(anchor => anchor.href);
-     });
-     console.log(`got allUrls as ${allUrls}`); */
 
 
     //get all urls from the page
@@ -187,7 +169,6 @@ Apify.main(async() => {
 
 
 
-
     const channelURL = await input.url;
     const channelProfileImageURL = await channelProfileImage.url;
 
@@ -215,7 +196,6 @@ Apify.main(async() => {
         channelLocation,
         channelDescription,
         channelProfileImageURL,
-        social,
         youtubeUrls,
         instagramUrls,
         twitterUrls,
@@ -228,12 +208,6 @@ Apify.main(async() => {
         twitchUrls,
         onlyfansUrls,
 
-        /*   channelLink1, */
-        /*  channelVerified, */
-        /*    channelWebsite, */
-        /*    socialHandles, */
-        redirectUrls5,
-        /*     socialHandles, */
     });
 
     console.log('Closing Puppeteer...');
