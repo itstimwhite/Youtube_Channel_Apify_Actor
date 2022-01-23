@@ -72,18 +72,6 @@ Apify.main(async() => {
     const totalViewCount = utils.unformatNumbers(totalViewCountStr);
     console.log(`got totalViewCount as ${totalViewCount}`);
 
-    /*  console.log(`searching for verified at ${channelVerifiedXp}`);
-    const channelVerified = await utils.getDataFromXpath(page, channelVerifiedXp, 'innerHTML')
-        .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-verified-failed'));
-    console.log(`got channelVerified as ${channelVerified}`);
-
-    if (await (channelVerified) !==
-        null) console.log('Channel is verified');
-    else console.log('Channel is not verified');
-
-    if (await (channelVerified) !== null) { verified = true }
- */
-
     console.log(`searching for joined Date at ${joinedDateXp}`);
     const joinedDate = await utils.getDataFromXpath(page, joinedDateXp, 'innerHTML')
         .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-joinedDate-failed'));
@@ -161,11 +149,41 @@ Apify.main(async() => {
     //if a url in the array contains 'tiktok' put it in a new array called tiktokUrls
     const tiktokUrls = redirectUrls5.filter(url => url.includes('tiktok')); //tiktokUrls is an array of urls that contain 'tiktok'
 
+    //if a url in the array contains 'tiktok' trim the url to remove the '?*" part and put it in a new array called tiktokUrls2"
+    const tiktokUrls2 = tiktokUrls.map(url => url.split('?')[0]); //tiktokUrls2 is an array of urls that contain 'tiktok'
+
     //if a url in the array contains 'twitch' put it in a new array called twitchUrls
     const twitchUrls = redirectUrls5.filter(url => url.includes('twitch')); //twitchUrls is an array of urls that contain 'twitch'
 
     //if a url in the array contains 'onlyfans' trim put it in a new array called onlyfansUrls
     const onlyfansUrls = redirectUrls5.filter(url => url.includes('onlyfans')); //onlyfansUrls is an array of urls that contain 'onlyfans'
+
+    //if a url in the array contains 'spotify' and ('user' or 'artist') put it in a new array called spotifyUrls
+    const spotifyUrls = redirectUrls5.filter(url => url.includes('spotify') && (url.includes('user') || url.includes('artist'))); //spotifyUrls is an array of urls that contain 'spotify' and ('user' or 'artist')
+
+    //if a url in the array contains 'soundcloud' put it in a new array called soundcloudUrls
+    const soundcloudUrls = redirectUrls5.filter(url => url.includes('soundcloud')); //soundcloudUrls is an array of urls that contain 'soundcloud'
+
+
+
+
+
+
+    //look for 'xpathCategory' on the page. If not found, set category to null
+    //if found, get the textContent of the element and set it as category
+    const verifiedCategory = await page.evaluate(() => {
+        const xpathCategory = document.evaluate('//*[@id="header"]/div[2]/div[2]/div/div[1]/div/div[1]/ytd-channel-name/ytd-badge-supported-renderer/div/tp-yt-paper-tooltip/div', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+        if (xpathCategory === null) {
+            return null;
+        } else {
+            return xpathCategory.textContent;
+        }
+    });
+    console.log(`got verifiedCategory as ${verifiedCategory}`);
+
+
+
+
 
 
     //if the channel is verified return true else return false
@@ -210,6 +228,7 @@ Apify.main(async() => {
         tiktokUrls,
         twitchUrls,
         onlyfansUrls,
+        verifiedCategory,
 
     });
 

@@ -1,0 +1,26 @@
+{
+    "title": "Youtube Channel Scraper input",
+    "description": "This actor scrapes the input url and returns the channel details.",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+        "startUrls": {
+            "title": "Start URLs",
+            "type": "array",
+            "description": "URLs to start with",
+            "prefill": [
+                { "url": "http://example.com" },
+                { "url": "http://example.com/some-path" }
+            ],
+            "editor": "requestListSources"
+        },
+        "pageFunction": {
+            "title": "Page function",
+            "type": "string",
+            "description": "Function executed for each request",
+            "prefill": "async () => {return $('title').text();}",
+            "editor": "javascript"
+        }
+    },
+    "required": ["startUrls", "pageFunction"]
+}
