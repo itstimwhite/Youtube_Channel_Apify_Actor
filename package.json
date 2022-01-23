@@ -8,5 +8,8 @@
         "test": "echo \"Error: oops, the actor has no tests yet, sad!\" && exit 1"
     },
     "author": "Tim White",
-    "license": "MIT"
+    "license": "MIT",
+    "devDependencies": {
+        "mocha": "^9.1.4"
+    }
 }

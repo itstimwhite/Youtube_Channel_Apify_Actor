@@ -1,7 +1,19 @@
 const Apify = require('apify');
 const CONSTS = require('./consts');
 const utils = require('./utility.js');
+const { describe, it } = require('mocha');
 
+/* describe('categorizeUrl', () => {
+    it('should categorize different start urls', () => {
+        expect(utils.categorizeUrl('')).to.equal('MASTER');
+        expect(utils.categorizeUrl('/watch?v=394u19u')).to.equal('DETAIL');
+        expect(utils.categorizeUrl('https://youtube.com/watch?v=394u19u')).to.equal('DETAIL');
+        expect(utils.categorizeUrl('/channel/asdrtsert/videos')).to.equal('CHANNEL');
+        expect(utils.categorizeUrl('https://www.youtube.com/user/asdrtsert/videos')).to.equal('CHANNEL');
+        expect(utils.categorizeUrl('https://www.youtube.com/c/asdrtsert')).to.equal('CHANNEL');
+        expect(utils.categorizeUrl('https://www.youtube.com/results?search_query=hello')).to.equal('SEARCH');
+    });
+}); */
 
 exports.getDataFromXpath = async(page, xPath, attrib) => {
     await page.waitForXPath(xPath, { timeout: 120 });
@@ -67,41 +79,16 @@ exports.handleErrorAndScreenshot = async(page, e, errorName) => {
     //throw `Error: ${errorName} - Raw error: ${e.message}`;
 };
 
-crawlFrames: async(page) => {
-        const socialHandles = {};
-        page.mainFrame().childFrames().forEach(async(item) => {
-            const html = await item.content();
-            let childSocialHandles = null;
-            const childParseData = {};
-            try {
-                childSocialHandles = Apify.utils.social.parseHandlesFromHtml(html, childParseData);
-
-                ['emails', 'phones', 'phonesUncertain', 'linkedIns', 'twitters', 'instagrams', 'facebooks'].forEach((field) => {
-                    socialHandles[field] = childSocialHandles[field];
-                });
-            } catch (e) {
-                log.info(e);
-            }
-        });
 
 
-        ['emails', 'phones', 'phonesUncertain', 'linkedIns', 'twitters', 'instagrams', 'facebooks'].forEach((field) => {
-            socialHandles[field] = _.uniq(socialHandles[field]);
-        });
 
-        return new Promise((resolve) => {
-            resolve(socialHandles);
-        });
-    },
-
-
-    //extract an instagram url from the page
-    //use a regex to extract the url
-    exports.extractInstagramUrl = async(page) => {
-        const html = await page.content();
-        const instagramUrl = html.match(/https:\/\/www\.instagram\.com\/[^/]+/g);
-        return instagramUrl;
-    };
+//extract an instagram url from the page
+//use a regex to extract the url
+exports.extractInstagramUrl = async(page) => {
+    const html = await page.content();
+    const instagramUrl = html.match(/https:\/\/www\.instagram\.com\/[^/]+/g);
+    return instagramUrl;
+};
 
 //extract a youtube url from the page
 //use a regex to extract the url
