@@ -164,8 +164,11 @@ Apify.main(async() => {
     //if a url in the array contains 'twitch' put it in a new array called twitchUrls
     const twitchUrls = redirectUrls5.filter(url => url.includes('twitch')); //twitchUrls is an array of urls that contain 'twitch'
 
-    //if a url in the array contains 'onlyfans' put it in a new array called onlyfansUrls
+    //if a url in the array contains 'onlyfans' trim put it in a new array called onlyfansUrls
     const onlyfansUrls = redirectUrls5.filter(url => url.includes('onlyfans')); //onlyfansUrls is an array of urls that contain 'onlyfans'
+
+
+    //if the channel is verified return true else return false
 
 
 
