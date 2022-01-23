@@ -11,7 +11,7 @@
             "default": [],
             "editor": "requestListSources",
             "sectionCaption": "Direct URLs"
-        },
+        }
     },
     "required": [
         "input"
