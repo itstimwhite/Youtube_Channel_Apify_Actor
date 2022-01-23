@@ -1,27 +1,17 @@
 {
-    "title": "Youtube Channel Scraper input",
-    "description": "This actor scrapes the input url and returns the channel details.",
+    "title": "YouTube Channel Scraper input",
+    "description": "This actor takes channels as an input and returns their details.",
     "type": "object",
     "schemaVersion": 1,
     "properties": {
         "input": {
-            "title": "Start URLs",
+            "title": "input urls",
             "type": "array",
-            "description": "URLs to start with",
-            "prefill": [
-                { "url": "http://youtube.com/user/itstimwhite" },
-                { "url": "http://youtube.com/c/timwhite" },
-                { "url": "http://youtube.com/timwhite" }
-            ],
-            "editor": "requestListSources"
-        },
-        "pageFunction": {
-            "title": "Page function",
-            "type": "string",
-            "description": "Function executed for each request",
-            "prefill": "async () => {return $('title').text();}",
-            "editor": "javascript"
+            "description": "URLs of YouTube Channels",
+            "editor": "json"
         }
     },
-    "required": ["startUrls", "pageFunction"]
+    "required": [
+        "input"
+    ]
 }
