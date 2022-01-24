@@ -1,19 +1,8 @@
 const Apify = require('apify');
 const CONSTS = require('./consts');
 const utils = require('./utility.js');
-const { describe, it } = require('mocha');
 
-/* describe('categorizeUrl', () => {
-    it('should categorize different start urls', () => {
-        expect(utils.categorizeUrl('')).to.equal('MASTER');
-        expect(utils.categorizeUrl('/watch?v=394u19u')).to.equal('DETAIL');
-        expect(utils.categorizeUrl('https://youtube.com/watch?v=394u19u')).to.equal('DETAIL');
-        expect(utils.categorizeUrl('/channel/asdrtsert/videos')).to.equal('CHANNEL');
-        expect(utils.categorizeUrl('https://www.youtube.com/user/asdrtsert/videos')).to.equal('CHANNEL');
-        expect(utils.categorizeUrl('https://www.youtube.com/c/asdrtsert')).to.equal('CHANNEL');
-        expect(utils.categorizeUrl('https://www.youtube.com/results?search_query=hello')).to.equal('SEARCH');
-    });
-}); */
+
 
 exports.getDataFromXpath = async(page, xPath, attrib) => {
     await page.waitForXPath(xPath, { timeout: 120 });
