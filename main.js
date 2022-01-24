@@ -62,39 +62,39 @@ Apify.main(async() => {
 
     console.log('Begining data extraction')
 
-    console.log(`searching for channel Name at ${channelNameXp}`);
+    /*    console.log(`searching for channel Name at ${channelNameXp}`); */
     const channelName = await utils.getDataFromXpath(page, channelNameXp, 'innerHTML')
         .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelName-failed'));
     console.log(`got channelName as ${channelName}`);
-
-    console.log(`searching for channel Subscriber Count at ${channelSubscriberCountXp}`);
+    /* 
+        console.log(`searching for channel Subscriber Count at ${channelSubscriberCountXp}`); */
     const channelSubscriberCountStr = await utils.getDataFromXpath(page, channelSubscriberCountXp, 'innerHTML')
         .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelSubscriberCount-failed'));
     const channelSubscriberCount = utils.unformatNumbers(channelSubscriberCountStr);
     console.log(`got channelSubscriberCount as ${channelSubscriberCount}`);
 
-    console.log('searching for Total View Count at ${totalViewCountXp}');
+    /*    console.log('searching for Total View Count at ${totalViewCountXp}'); */
     const totalViewCountStr = await utils.getDataFromXpath(page, totalViewCountXp, 'innerHTML')
         .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-totalViewCount-failed'));
     const totalViewCount = utils.unformatNumbers(totalViewCountStr);
     console.log(`got totalViewCount as ${totalViewCount}`);
 
-    console.log(`searching for joined Date at ${joinedDateXp}`);
+    /*     console.log(`searching for joined Date at ${joinedDateXp}`); */
     const joinedDate = await utils.getDataFromXpath(page, joinedDateXp, 'innerHTML')
         .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-joinedDate-failed'));
     console.log(`got joinedDate as ${joinedDate}`);
 
-    console.log(`searching for channel Location at ${channelLocationXp}`);
+    /*   console.log(`searching for channel Location at ${channelLocationXp}`); */
     const channelLocation = await utils.getDataFromXpath(page, channelLocationXp, 'innerHTML')
         .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelLocation-failed'));
     console.log(`got channelLocation as ${channelLocation}`);
 
-    console.log(`searching for channel Description at ${channelDescriptionXp}`);
+    /* console.log(`searching for channel Description at ${channelDescriptionXp}`); */
     const channelDescription = await utils.getDataFromXpath(page, channelDescriptionXp, 'innerHTML')
         .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelDescription-failed'));
     console.log(`got channelDescription as ${channelDescription}`);
 
-    console.log(`searching for channel Profile Image at ${channelProfileImageXp}`);
+    /*     console.log(`searching for channel Profile Image at ${channelProfileImageXp}`); */
     const channelProfileImage = await utils.getDataFromXpath(page, channelProfileImageXp, 'src')
         .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelProfileImage-failed'));
     console.log(`got channelProfileImage as ${channelProfileImage}`);
@@ -108,29 +108,31 @@ Apify.main(async() => {
     });
     console.log(`got allUrls as ${allUrls}`);
 
+    console.log('Cleaning URLs');
+
     const redirectUrls = Array.from(allUrls);
-    console.log(`got redirectUrls as ${redirectUrls}`);
+    /* console.log(`got redirectUrls as ${redirectUrls}`); */
     //search for 'q' in the url in the array allUrls and output it to redirectUrls2
     const redirectUrls2 = redirectUrls.filter(url => url.includes('q='));
-    console.log(`got redirectUrls2 as ${redirectUrls2}`);
+    /*   console.log(`got redirectUrls2 as ${redirectUrls2}`); */
 
     //get the value of the 'q' parameter from the url in the array redirectUrls2
     const redirectUrls3 = redirectUrls2.map(url => url.split('q=')[1]);
-    console.log(`got redirectUrls3 as ${redirectUrls3}`);
-
+    /* console.log(`got redirectUrls3 as ${redirectUrls3}`);
+     */
     //decode the urls in the array redirectUrls3 and output it to redirectUrls4
     const redirectUrls4 = redirectUrls3.map(url => decodeURIComponent(url));
-    console.log(`got redirectUrls4 as ${redirectUrls4}`);
-
+    /*  console.log(`got redirectUrls4 as ${redirectUrls4}`);
+     */
     //dedupe the urls in the array redirectUrls4 and output it to redirectUrls5
     const redirectUrls5 = Array.from(new Set(redirectUrls4));
-    console.log(`got redirectUrls5 as ${redirectUrls5}`);
+    /* console.log(`got redirectUrls5 as ${redirectUrls5}`); */
 
 
 
     //if a url in the array redirectUrls5 contains 'youtube' put it in a new array called youtubeUrls else put it in a new array called otherUrls
     const youtubeUrls = redirectUrls5.filter(url => url.includes('youtube')); //youtubeUrls is an array of urls that contain 'youtube'
-    console.log(`got youtubeUrls as ${youtubeUrls}`);
+    /*   console.log(`got youtubeUrls as ${youtubeUrls}`); */
 
     //if a url in the array redirectUrls5 contains 'instagram' put it in a new array called instagramUrls
     const instagramUrls = redirectUrls5.filter(url => url.includes('instagram')); //instagramUrls is an array of urls that contain 'instagram'
@@ -171,9 +173,9 @@ Apify.main(async() => {
     //if a url in the array contains 'soundcloud' put it in a new array called soundcloudUrls
     const soundcloudUrls = redirectUrls5.filter(url => url.includes('soundcloud')); //soundcloudUrls is an array of urls that contain 'soundcloud'
 
+    console.log('Cleaning URLs done');
 
-
-
+    console.log('Getting verified status');
 
 
     //look for 'xpathCategory' on the page. If not found, set category to null
