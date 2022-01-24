@@ -4,9 +4,9 @@
     "type": "object",
     "schemaVersion": 1,
     "properties": {
-        "startUrls": {
+        "url": {
             "title": "Direct URLs",
-            "type": "array",
+            "type": "string",
             "description": "Provide some direct Youtube urls, like channel url.",
             "default": [],
             "editor": "requestListSources",
