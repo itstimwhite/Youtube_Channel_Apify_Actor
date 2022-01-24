@@ -1,12 +1,4 @@
 {
-    "startUrls": [{
-            "url": "http://www.youtube.com/user/beautygloss"
-        },
-        {
-            "url": "http://www.youtube.com/channel/UCwGg85wscyQQJlM-WOrtExw"
-        },
-        {
-            "url": "http://www.youtube.com/user/beautypearluk"
-        }
-    ]
+    "url": "http://www.youtube.com/user/beautygloss"
+
 }

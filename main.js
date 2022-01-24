@@ -7,16 +7,6 @@
 const Apify = require('apify');
 const CONSTS = require('./consts');
 const utils = require('./utility');
-const url = require('url');
-const {
-    getInitialRequests,
-    executeCustomDataFunction,
-    getInfoStringFromResults,
-    createSerpRequest,
-    logAsciiArt,
-    createDebugInfo,
-    ensureAccessToSerpProxy,
-} = require('./tools');
 /* const crawler = require('./crawler_utils'); */
 
 const { log, puppeteer } = Apify.utils;
@@ -35,36 +25,6 @@ Apify.main(async() => {
     console.log('Input:');
     console.dir(input);
 
-    const {
-        /*   verboseLog, */
-        startUrls = [],
-            /*     proxyConfiguration,
-                handlePageTimeoutSecs = 3600, */
-    } = input;
-
-    /*  if (verboseLog) {
-         log.setLevel(log.LEVELS.DEBUG);
-     } */
-
-    const kvStore = await Apify.openKeyValueStore();
-    const requestQueue = await Apify.openRequestQueue();
-    /* const proxyConfig = await utils.proxyConfiguration({
-        proxyConfig: proxyConfiguration,
-    }); */
-
-    //take the array startUrls and put them in the request queue
-    for (const startUrl of startUrls) {
-        await requestQueue.addRequest({ url: startUrl });
-    }
-
-    //take the first url from the request queue and start the crawler
-    // Create initial request list and queue.
-    const initialRequests = getInitialRequests(input);
-    if (!initialRequests.length) throw new Error('The input must contain at least one search query or URL.');
-    const requestList = await Apify.openRequestList('initial-requests', initialRequests);
-    const requestQueue = await Apify.openRequestQueue();
-    const dataset = await Apify.openDataset();
-    const keyValueStore = await Apify.openKeyValueStore();
 
     if (!input || !input.url) throw new Error('Input must be a JSON object with the "url" field!');
 
