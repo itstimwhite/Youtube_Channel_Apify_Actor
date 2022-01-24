@@ -70,13 +70,15 @@ Apify.main(async() => {
         console.log(`searching for channel Subscriber Count at ${channelSubscriberCountXp}`); */
     const channelSubscriberCountStr = await utils.getDataFromXpath(page, channelSubscriberCountXp, 'innerHTML')
         .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelSubscriberCount-failed'));
-    const channelSubscriberCount = utils.unformatNumbers(channelSubscriberCountStr);
+    const channelSubscriberCount = await utils.unformatNumbers(channelSubscriberCountStr);
+    console.log(`got channelSubscriberCount as ${channelSubscriberCount}`);
+
     console.log(`got channelSubscriberCount as ${channelSubscriberCount}`);
 
     /*    console.log('searching for Total View Count at ${totalViewCountXp}'); */
     const totalViewCountStr = await utils.getDataFromXpath(page, totalViewCountXp, 'innerHTML')
         .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-totalViewCount-failed'));
-    const totalViewCount = utils.unformatNumbers(totalViewCountStr);
+    const totalViewCount = await utils.unformatNumbers(totalViewCountStr);
     console.log(`got totalViewCount as ${totalViewCount}`);
 
     /*     console.log(`searching for joined Date at ${joinedDateXp}`); */
@@ -106,7 +108,7 @@ Apify.main(async() => {
         const anchors = Array.from(document.querySelectorAll('a'));
         return anchors.map(anchor => anchor.href);
     });
-    console.log(`got allUrls as ${allUrls}`);
+    console.log(`Got all URLs.`);
 
     console.log('Cleaning URLs');
 
