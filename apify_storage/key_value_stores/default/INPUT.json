@@ -1,4 +1,15 @@
 {
-    "url": "http://www.youtube.com/user/beautygloss"
-
+    "proxyConfiguration": {
+        "useApifyProxy": true,
+        "apifyProxyGroups": [
+            "GOOGLESERP"
+        ]
+    },
+    "startUrls": [{
+            "url": "https://www.youtube.com/channel/UCC3cecSK6xT-BOg-XUtYwbQ"
+        },
+        {
+            "url": "https://www.youtube.com/channel/UCotujqsJrS3L3WzQsufQFMw"
+        }
+    ]
 }

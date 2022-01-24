@@ -8,14 +8,15 @@ const Apify = require('apify');
 const CONSTS = require('./consts');
 const utils = require('./utility');
 
+
+
 /* const crawler = require('./crawler_utils'); */
 Apify.main(async() => {
     // Create a RequestList
-    const requestList = await Apify.openRequestList('start-urls', [
-        { url: 'https://www.youtube.com/channel/UC9_KIDiMWS6vnbHfFOH1aKQ' },
-        { url: 'https://www.youtube.com/c/harvard' },
-        { url: 'https://www.youtube.com/c/ycombinator' },
-    ]);
+    const input = await Apify.getInput();
+    console.log(input);
+
+    const requestList = await Apify.openRequestList('start-urls');
     // Function called for each URL
 
 
@@ -32,6 +33,8 @@ Apify.main(async() => {
 
 
         /*     if (!input || !input.url) throw new Error('Input must be a JSON object with the "url" field!'); */
+
+
 
         const inputModified = utils.appendAbout(request.url);
         console.log(`Modified input is "${inputModified}".`);
@@ -63,6 +66,7 @@ Apify.main(async() => {
         socialLinksXp = CONSTS.SELECTORS.socialLinksXp;
         leftColumnXp = CONSTS.SELECTORS.leftColumnXp;
 
+
         console.log('Begining data extraction')
 
         /*    console.log(`searching for channel Name at ${channelNameXp}`); */
@@ -73,14 +77,18 @@ Apify.main(async() => {
             console.log(`searching for channel Subscriber Count at ${channelSubscriberCountXp}`); */
         const channelSubscriberCountStr = await utils.getDataFromXpath(page, channelSubscriberCountXp, 'innerHTML')
             .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelSubscriberCount-failed'));
+
         const channelSubscriberCount = await utils.unformatNumbers(channelSubscriberCountStr);
+        //catch errors
+
+
         console.log(`got channelSubscriberCount as ${channelSubscriberCount}`);
 
         console.log(`got channelSubscriberCount as ${channelSubscriberCount}`);
 
         /*    console.log('searching for Total View Count at ${totalViewCountXp}'); */
         const totalViewCountStr = await utils.getDataFromXpath(page, totalViewCountXp, 'innerHTML')
-            .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-totalViewCount-failed'));
+            /*  .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-totalViewCount-failed')); */
         const totalViewCount = await utils.unformatNumbers(totalViewCountStr);
         console.log(`got totalViewCount as ${totalViewCount}`);
 
@@ -294,6 +302,8 @@ Apify.main(async() => {
         requestList,
         handlePageFunction,
         maxRequestsPerCrawl: 20,
+        maxConcurrency: 5,
+        taskTimeoutSecs: 20,
     });
     // Run the crawler
     await crawler.run();
