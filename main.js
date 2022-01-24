@@ -7,9 +7,9 @@
 const Apify = require('apify');
 const CONSTS = require('./consts');
 const utils = require('./utility');
+
 /* const crawler = require('./crawler_utils'); */
 
-const { log, puppeteer } = Apify.utils;
 
 
 
