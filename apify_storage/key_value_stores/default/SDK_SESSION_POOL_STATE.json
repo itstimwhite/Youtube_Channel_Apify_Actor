@@ -3,7 +3,7 @@
   "retiredSessionsCount": 0,
   "sessions": [
     {
-      "id": "session_QXaCMdUJVt",
+      "id": "session_2QJWKsVLbx",
       "cookieJar": {
         "version": "tough-cookie@4.0.0",
         "storeType": "MemoryCookieStore",
@@ -13,13 +13,13 @@
       "userData": {},
       "maxErrorScore": 3,
       "errorScoreDecrement": 0.5,
-      "expiresAt": "2022-01-24T22:55:41.971Z",
-      "createdAt": "2022-01-24T22:05:41.971Z",
+      "expiresAt": "2022-01-24T23:13:02.769Z",
+      "createdAt": "2022-01-24T22:23:02.769Z",
       "usageCount": 1,
       "errorScore": 0
     },
     {
-      "id": "session_kTOd9N45sE",
+      "id": "session_IuQ1w257an",
       "cookieJar": {
         "version": "tough-cookie@4.0.0",
         "storeType": "MemoryCookieStore",
@@ -28,62 +28,62 @@
           {
             "key": "PREF",
             "value": "tz=America.New_York",
-            "expires": "2024-01-24T22:05:47.000Z",
+            "expires": "2024-01-24T22:23:08.000Z",
             "domain": "youtube.com",
             "path": "/",
             "secure": true,
             "hostOnly": false,
-            "creation": "2022-01-24T22:05:43.961Z",
-            "lastAccessed": "2022-01-24T22:05:48.236Z"
+            "creation": "2022-01-24T22:23:04.863Z",
+            "lastAccessed": "2022-01-24T22:23:09.093Z"
           },
           {
             "key": "VISITOR_INFO1_LIVE",
-            "value": "_S13bm7bMbo",
-            "expires": "2022-07-23T22:05:42.488Z",
+            "value": "yAY0FnXEWLw",
+            "expires": "2022-07-23T22:23:03.276Z",
             "domain": "youtube.com",
             "path": "/",
             "secure": true,
             "httpOnly": true,
             "hostOnly": false,
-            "creation": "2022-01-24T22:05:43.965Z",
-            "lastAccessed": "2022-01-24T22:05:48.237Z"
+            "creation": "2022-01-24T22:23:04.867Z",
+            "lastAccessed": "2022-01-24T22:23:09.094Z"
           },
           {
             "key": "YSC",
-            "value": "VIK5oRNInds",
-            "expires": "2022-01-24T22:55:48.236Z",
+            "value": "IFAahmcwfqw",
+            "expires": "2022-01-24T23:13:09.093Z",
             "domain": "youtube.com",
             "path": "/",
             "secure": true,
             "httpOnly": true,
             "hostOnly": false,
-            "creation": "2022-01-24T22:05:43.967Z",
-            "lastAccessed": "2022-01-24T22:05:48.238Z"
+            "creation": "2022-01-24T22:23:04.869Z",
+            "lastAccessed": "2022-01-24T22:23:09.095Z"
           },
           {
             "key": "GPS",
             "value": "1",
-            "expires": "2022-01-24T22:35:42.488Z",
+            "expires": "2022-01-24T22:53:03.276Z",
             "domain": "youtube.com",
             "path": "/",
             "secure": true,
             "httpOnly": true,
             "hostOnly": false,
-            "creation": "2022-01-24T22:05:43.967Z",
-            "lastAccessed": "2022-01-24T22:05:48.239Z"
+            "creation": "2022-01-24T22:23:04.869Z",
+            "lastAccessed": "2022-01-24T22:23:09.095Z"
           }
         ]
       },
       "userData": {},
       "maxErrorScore": 3,
       "errorScoreDecrement": 0.5,
-      "expiresAt": "2022-01-24T22:55:41.973Z",
-      "createdAt": "2022-01-24T22:05:41.973Z",
+      "expiresAt": "2022-01-24T23:13:02.771Z",
+      "createdAt": "2022-01-24T22:23:02.771Z",
       "usageCount": 3,
       "errorScore": 0
     },
     {
-      "id": "session_7g0mb8AX2s",
+      "id": "session_FKb1oxz7rU",
       "cookieJar": {
         "version": "tough-cookie@4.0.0",
         "storeType": "MemoryCookieStore",
@@ -93,13 +93,13 @@
       "userData": {},
       "maxErrorScore": 3,
       "errorScoreDecrement": 0.5,
-      "expiresAt": "2022-01-24T22:55:41.975Z",
-      "createdAt": "2022-01-24T22:05:41.975Z",
+      "expiresAt": "2022-01-24T23:13:02.772Z",
+      "createdAt": "2022-01-24T22:23:02.772Z",
       "usageCount": 1,
       "errorScore": 0
     },
     {
-      "id": "session_LC0LCjdfgg",
+      "id": "session_oatguAoFBs",
       "cookieJar": {
         "version": "tough-cookie@4.0.0",
         "storeType": "MemoryCookieStore",
@@ -109,8 +109,8 @@
       "userData": {},
       "maxErrorScore": 3,
       "errorScoreDecrement": 0.5,
-      "expiresAt": "2022-01-24T22:55:46.861Z",
-      "createdAt": "2022-01-24T22:05:46.861Z",
+      "expiresAt": "2022-01-24T23:13:07.696Z",
+      "createdAt": "2022-01-24T22:23:07.696Z",
       "usageCount": 1,
       "errorScore": 0
     }

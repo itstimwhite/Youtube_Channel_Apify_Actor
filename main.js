@@ -25,9 +25,9 @@ Apify.main(async() => {
         // This should look familiar if you ever worked with jQuery.
         // We're just getting the text content of the <title> HTML element.
 
-        const input = await Apify.getInput();
-        console.log('Input:');
-        console.dir(input);
+        /*  const input = await Apify.getInput();
+         console.log('Input:');
+         console.dir(input); */
 
 
 
