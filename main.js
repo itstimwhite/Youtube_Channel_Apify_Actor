@@ -14,10 +14,35 @@ const utils = require('./utility');
 Apify.main(async() => {
     // Create a RequestList
     const input = await Apify.getInput();
+    const {
+        verboseLog,
+        startUrls = [],
+    } = input;
+    if (verboseLog) {
+        log.setLevel(log.LEVELS.DEBUG);
+    }
     console.log(input);
 
-    const requestList = await Apify.openRequestList('start-urls', ['https://youtube.com/ninja']);
-    // Function called for each URL
+    // Use the constructor to get more control over the initialization.
+    const requestList = new Apify.RequestList({
+        sources: [
+            // Separate requests
+            { url: 'http://youtube.com/lorena' },
+
+
+            /*   { url: 'http://www.example.com/page-2' }, */
+
+            // Bulk load of URLs from file `http://www.example.com/my-url-list.txt`
+            // Note that all URLs must start with http:// or https://
+            /*   { requestsFromUrl: '/fashion_channels.txt', userData: { isFromUrl: true } }, */
+        ],
+
+        // Persist the state to avoid re-crawling which can lead to data duplications.
+        // Keep in mind that the sources have to be immutable or this will throw an error.
+        /*  persistStateKey: 'tw-state', */
+    });
+
+    await requestList.initialize();
 
 
 
@@ -35,7 +60,6 @@ Apify.main(async() => {
         /*     if (!input || !input.url) throw new Error('Input must be a JSON object with the "url" field!'); */
 
 
-
         const inputModified = utils.appendAbout(request.url);
         console.log(`Modified input is "${inputModified}".`);
 
@@ -45,6 +69,30 @@ Apify.main(async() => {
         console.log(`Opening page ${inputModified}...`);
         const page = await browser.newPage();
         await page.goto(inputModified);
+
+        //handle interuptions
+        const hasCaptcha = await page.$('.g-recaptcha');
+        if (hasCaptcha) {
+            session.retire();
+            throw 'Got captcha, page will be retried. If this happens often, consider increasing number of proxies';
+        }
+
+
+
+        if (await page.$('.yt-upsell-dialog-renderer')) {
+            // this dialog steal focus, so need to click it
+            await page.evaluate(async() => {
+                const noThanks = document.querySelectorAll('.yt-upsell-dialog-renderer [role="button"]');
+
+                for (const button of noThanks) {
+                    if (button.textContent && button.textContent.includes('No thanks')) {
+                        button.click();
+                        break;
+                    }
+                }
+            });
+        }
+
 
 
 
@@ -305,6 +353,10 @@ Apify.main(async() => {
         maxConcurrency: 5,
         handlePageTimeoutSecs: 20,
         maxRequestRetries: 1,
+        browserPoolOptions: {
+            maxOpenPagesPerBrowser: 1,
+        },
+        useSessionPool: true,
     });
     // Run the crawler
     await crawler.run();
