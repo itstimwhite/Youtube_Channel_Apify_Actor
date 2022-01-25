@@ -16,7 +16,7 @@ Apify.main(async() => {
     const input = await Apify.getInput();
     console.log(input);
 
-    const requestList = await Apify.openRequestList('start-urls');
+    const requestList = await Apify.openRequestList('start-urls', ['https://youtube.com/ninja']);
     // Function called for each URL
 
 
@@ -303,7 +303,8 @@ Apify.main(async() => {
         handlePageFunction,
         maxRequestsPerCrawl: 20,
         maxConcurrency: 5,
-        taskTimeoutSecs: 20,
+        handlePageTimeoutSecs: 20,
+        maxRequestRetries: 1,
     });
     // Run the crawler
     await crawler.run();
