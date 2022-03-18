@@ -1,6 +1,10 @@
 {
+    "name": "youtube-channel-apify-actor",
+    "version": "0.0.1",
+    "description": "This is actor accepts YouTube channel URLs and returns details from their corresponding 'about' pages.",
     "dependencies": {
         "apify": "^2.2.1",
+        "dotenv": "^16.0.0",
         "puppeteer": "^10.4.0"
     },
     "scripts": {

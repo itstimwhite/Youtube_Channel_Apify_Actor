@@ -1,13 +1,14 @@
 {
-    "title": "Input schema for the youtube-search-scraper actor",
-    "description": "This is actor accepts YouTube channel URLs and returns details from their corresponding 'about' pages.",
+    "title": "Input schema for the youtube-channel-apify-actor actor",
+    "description": "This actor accepts YouTube channel URLs and returns details from their corresponding 'about' pages.",
     "type": "object",
     "schemaVersion": 1,
     "properties": {
-        "start-Urls": {
+        "startUrls": {
             "title": "Direct URLs",
             "type": "array",
-            "description": "Provide some direct Youtube urls, like channel urls or search urls. When provided, it disables search.",
+            "description": "Provide some direct Youtube channel urls.",
+            "prefill": [],
             "default": [],
             "editor": "requestListSources",
             "sectionCaption": "Direct URLs"
@@ -27,6 +28,7 @@
         }
     },
     "required": [
+        "startUrls",
         "proxyConfiguration"
     ]
 }

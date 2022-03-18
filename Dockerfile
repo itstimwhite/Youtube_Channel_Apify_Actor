@@ -3,10 +3,6 @@
 # You can also use any other image from Docker Hub.
 FROM apify/actor-node-puppeteer-chrome:16
 
-
-
-
-
 # Second, copy just package.json and package-lock.json since it should be
 # the only file that affects "npm install" in the next step, to speed up the build
 COPY package*.json ./
@@ -33,5 +29,4 @@ COPY . ./
 # that runs the Node.js source code using the command specified
 # in the "scripts.start" section of the package.json file.
 # In short, the instruction looks something like this:
-#
 # CMD npm start
