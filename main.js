@@ -20,9 +20,12 @@ Apify.main(async () => {
         log.setLevel(log.LEVELS.DEBUG);
     }
 
+    const requestList = await Apify.openRequestList(null, startUrls);
     const requestQueue = await Apify.openRequestQueue();
-    for (const entry of startUrls) {
-        await requestQueue.addRequest({ url: entry.url += '/about' });
+
+    let req;
+    while (req = await requestList.fetchNextRequest()) {
+        await requestQueue.addRequest({ url: req.url += '/about' });
     }
 
     const proxyConfig = await utils.proxyConfiguration({

@@ -87,9 +87,9 @@ module.exports = async ({ page, request, session, response }) => {
         .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelDescription-failed'));
     log.debug(`Got channelDescription as ${channelDescription}`);
 
-    const channelProfileImage = await utils.getDataFromXpath(page, CHANNEL_PROFILE_IMAGE_XP, 'src')
+    const channelProfileImageURL = await utils.getDataFromXpath(page, CHANNEL_PROFILE_IMAGE_XP, 'src')
         .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelProfileImage-failed'));
-    log.debug(`Got channelProfileImage as ${channelProfileImage}`);
+    log.debug(`Got channelProfileImage as ${channelProfileImageURL}`);
 
     const allUrls = await page.evaluate(() => {
         const anchors = Array.from(document.querySelectorAll('a'));
@@ -181,9 +181,8 @@ module.exports = async ({ page, request, session, response }) => {
     });
     log.debug(`Got verifiedCategory as ${verifiedCategory}`);
 
-    // If the channel is verified return true else return false
-    const channelURL = request.url;
-    const channelProfileImageURL = await channelProfileImage.url;
+
+    const channelURL = request.url.replace('/about', '');
 
     const channelEmail = Apify.utils.social.emailsFromText(channelDescription);
     log.debug(`Got email as ${channelEmail}`);
