@@ -218,5 +218,5 @@ module.exports = async ({ page, request, session, response }) => {
         verifiedCategory
     });
 
-    log.info('Finished data extraction');
+    log.info(`Finished data extraction for ${request.url}`);
 };
