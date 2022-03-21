@@ -74,6 +74,11 @@
     },
     "required": [
         "startUrls",
+        "handlePageTimeoutSecs",
+        "maxRequestRetries",
+        "minConcurrency",
+        "maxConcurrency",
+        "maxRequestsPerCrawl",
         "proxyConfiguration"
     ]
 }
