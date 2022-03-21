@@ -5,5 +5,19 @@ This scraper accepts youtube channel URLs as an input and returns various links 
 Apify SDK https://sdk.apify.com/
 
 
-# Personal data
-Some pages you on the internet contain personal data.  If you choose to input a url that has personal data you should be aware of the legalities of collecting such information and whether or not your use case is legitimate and/or ethical.  Further personal data is protected by GDPR in the European Union and by other regulators globally. You can find more information on the legalities of web scraping on the Apify blog. But always consult a lawyer before collecting personal data and ensure you are operating legally. We assume no liability for the misuse of this product.
+
+## What does [Actor Name] do?
+YouTube Channel Contact Scraper will enable you to get more data from YouTube than the official YouTube API.
+
+Youtube Channel Apify Actor can scrape:
+- Channel Name
+- Channel Location
+- Emails
+- Social media profiles (including TikTok, Instagram, Twitter, LinkedIn, & more.)
+- Subscriber count
+- Verified status (Verified, Official Artist Channel, or unverfieid)
+
+
+
+## Is it legal to scrape [target website name]?
+Note that personal data is protected by GDPR in the European Union and by other regulations around the world. You should not scrape personal data unless you have a legitimate reason to do so. If you're unsure whether your reason is legitimate, consult your lawyers. We also recommend that you read our blog post: [is web scraping legal?](https://blog.apify.com/is-web-scraping-legal/)
