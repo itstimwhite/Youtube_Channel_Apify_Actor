@@ -19,7 +19,7 @@
             "description": "Timeout in which the function passed as handlePageFunction needs to finish, in seconds.",
             "prefill": 30,
             "default": 30,
-            "editor": "keyValue",
+            "editor": "number",
             "sectionCaption": "Handle Page Timeout Secs"
         },
         "maxRequestRetries": {
@@ -28,7 +28,7 @@
             "description": "Indicates how many times the request is retried if BasicCrawlerOptions.handleRequestFunction fails.",
             "prefill": 1,
             "default": 1,
-            "editor": "keyValue",
+            "editor": "number",
             "sectionCaption": "Max Request Retries"
         },
         "minConcurrency": {
@@ -37,7 +37,7 @@
             "description": "Sets the minimum concurrency (parallelism) for the crawl. Shortcut to the corresponding AutoscaledPool option.",
             "prefill": 1,
             "default": 1,
-            "editor": "keyValue",
+            "editor": "number",
             "sectionCaption": "Min Concurrency"
         },
         "maxConcurrency": {
@@ -46,7 +46,7 @@
             "description": "Sets the maximum concurrency (parallelism) for the crawl. Shortcut to the corresponding AutoscaledPool option.",
             "prefill": 100,
             "default": 100,
-            "editor": "keyValue",
+            "editor": "number",
             "sectionCaption": "Max Concurrency"
         },
         "maxRequestsPerCrawl": {
@@ -55,7 +55,7 @@
             "description": "Maximum number of pages that the crawler will open. The crawl will stop when this limit is reached.",
             "prefill": 10,
             "default": 10,
-            "editor": "keyValue",
+            "editor": "number",
             "sectionCaption": "Max Requests Per Crawl"
         },
         "proxyConfiguration": {
