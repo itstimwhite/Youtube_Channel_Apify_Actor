@@ -13,6 +13,51 @@
             "editor": "requestListSources",
             "sectionCaption": "Direct URLs"
         },
+        "handlePageTimeoutSecs": {
+            "title": "Handle Page Timeout Secs",
+            "type": "integer",
+            "description": "Timeout in which the function passed as handlePageFunction needs to finish, in seconds.",
+            "prefill": 30,
+            "default": 30,
+            "editor": "keyValue",
+            "sectionCaption": "Handle Page Timeout Secs"
+        },
+        "maxRequestRetries": {
+            "title": "Max Request Retries",
+            "type": "integer",
+            "description": "Indicates how many times the request is retried if BasicCrawlerOptions.handleRequestFunction fails.",
+            "prefill": 1,
+            "default": 1,
+            "editor": "keyValue",
+            "sectionCaption": "Max Request Retries"
+        },
+        "minConcurrency": {
+            "title": "Min Concurrency",
+            "type": "integer",
+            "description": "Sets the minimum concurrency (parallelism) for the crawl. Shortcut to the corresponding AutoscaledPool option.",
+            "prefill": 1,
+            "default": 1,
+            "editor": "keyValue",
+            "sectionCaption": "Min Concurrency"
+        },
+        "maxConcurrency": {
+            "title": "Max Concurrency",
+            "type": "integer",
+            "description": "Sets the maximum concurrency (parallelism) for the crawl. Shortcut to the corresponding AutoscaledPool option.",
+            "prefill": 100,
+            "default": 100,
+            "editor": "keyValue",
+            "sectionCaption": "Max Concurrency"
+        },
+        "maxRequestsPerCrawl": {
+            "title": "Max Requests Per Crawl",
+            "type": "integer",
+            "description": "Maximum number of pages that the crawler will open. The crawl will stop when this limit is reached.",
+            "prefill": 10,
+            "default": 10,
+            "editor": "keyValue",
+            "sectionCaption": "Max Requests Per Crawl"
+        },
         "proxyConfiguration": {
             "title": "Proxy configuration",
             "type": "object",
