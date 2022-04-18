@@ -8,7 +8,7 @@
       "title": "Direct URLs",
       "type": "array",
       "description": "Provide some direct Youtube channel urls.",
-      "prefill": [],
+      "prefill": ["https://www.youtube.com/c/SydneySerena/"],
       "default": [],
       "editor": "requestListSources",
       "sectionCaption": "Direct URLs"
