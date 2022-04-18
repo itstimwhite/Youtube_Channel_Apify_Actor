@@ -1,84 +1,72 @@
 {
-    "title": "Input schema for the youtube-channel-apify-actor actor",
-    "description": "This actor accepts YouTube channel URLs and returns details from their corresponding 'about' pages.",
-    "type": "object",
-    "schemaVersion": 1,
-    "properties": {
-        "startUrls": {
-            "title": "Direct URLs",
-            "type": "array",
-            "description": "Provide some direct Youtube channel urls.",
-            "prefill": [],
-            "default": [],
-            "editor": "requestListSources",
-            "sectionCaption": "Direct URLs"
-        },
-        "handlePageTimeoutSecs": {
-            "title": "Handle Page Timeout Secs",
-            "type": "integer",
-            "description": "Timeout in which the function passed as handlePageFunction needs to finish, in seconds.",
-            "prefill": 30,
-            "default": 30,
-            "editor": "number",
-            "sectionCaption": "Handle Page Timeout Secs"
-        },
-        "maxRequestRetries": {
-            "title": "Max Request Retries",
-            "type": "integer",
-            "description": "Indicates how many times the request is retried if BasicCrawlerOptions.handleRequestFunction fails.",
-            "prefill": 1,
-            "default": 1,
-            "editor": "number",
-            "sectionCaption": "Max Request Retries"
-        },
-        "minConcurrency": {
-            "title": "Min Concurrency",
-            "type": "integer",
-            "description": "Sets the minimum concurrency (parallelism) for the crawl. Shortcut to the corresponding AutoscaledPool option.",
-            "prefill": 1,
-            "default": 1,
-            "editor": "number",
-            "sectionCaption": "Min Concurrency"
-        },
-        "maxConcurrency": {
-            "title": "Max Concurrency",
-            "type": "integer",
-            "description": "Sets the maximum concurrency (parallelism) for the crawl. Shortcut to the corresponding AutoscaledPool option.",
-            "prefill": 100,
-            "default": 100,
-            "editor": "number",
-            "sectionCaption": "Max Concurrency"
-        },
-        "maxRequestsPerCrawl": {
-            "title": "Max Requests Per Crawl",
-            "type": "integer",
-            "description": "Maximum number of pages that the crawler will open. The crawl will stop when this limit is reached.",
-            "prefill": 10,
-            "default": 10,
-            "editor": "number",
-            "sectionCaption": "Max Requests Per Crawl"
-        },
-        "proxyConfiguration": {
-            "title": "Proxy configuration",
-            "type": "object",
-            "editor": "proxy",
-            "description": "The best option is usually Automatic proxy. But you can also use your own proxies or no proxy",
-            "prefill": {
-                "useApifyProxy": true
-            },
-            "default": {
-                "useApifyProxy": true
-            },
-            "sectionCaption": "Proxy and browser configuration"
-        }
+  "title": "Input schema for the youtube-channel-apify-actor actor",
+  "description": "This actor accepts YouTube channel URLs and returns details from their corresponding 'about' pages.",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "startUrls": {
+      "title": "Direct URLs",
+      "type": "array",
+      "description": "Provide some direct Youtube channel urls.",
+      "prefill": [],
+      "default": [],
+      "editor": "requestListSources",
+      "sectionCaption": "Direct URLs"
     },
-    "required": [
-        "startUrls",
-        "handlePageTimeoutSecs",
-        "maxRequestRetries",
-        "minConcurrency",
-        "maxConcurrency",
-        "maxRequestsPerCrawl",
-        "proxyConfiguration"
-    ]
+    "handlePageTimeoutSecs": {
+      "title": "Handle Page Timeout Secs",
+      "type": "integer",
+      "description": "Timeout in which the function passed as handlePageFunction needs to finish, in seconds.",
+      "prefill": 30,
+      "default": 30,
+      "editor": "number",
+      "sectionCaption": "Advanced settings"
+    },
+    "maxRequestRetries": {
+      "title": "Max Request Retries",
+      "type": "integer",
+      "description": "Indicates how many times the request is retried if BasicCrawlerOptions.handleRequestFunction fails.",
+      "prefill": 1,
+      "default": 1,
+      "editor": "number"
+    },
+    "minConcurrency": {
+      "title": "Min Concurrency",
+      "type": "integer",
+      "description": "Sets the minimum concurrency (parallelism) for the crawl. Shortcut to the corresponding AutoscaledPool option.",
+      "prefill": 1,
+      "default": 1,
+      "editor": "number"
+    },
+    "maxConcurrency": {
+      "title": "Max Concurrency",
+      "type": "integer",
+      "description": "Sets the maximum concurrency (parallelism) for the crawl. Shortcut to the corresponding AutoscaledPool option.",
+      "prefill": 100,
+      "default": 100,
+      "editor": "number"
+    },
+    "maxRequestsPerCrawl": {
+      "title": "Max Requests Per Crawl",
+      "type": "integer",
+      "description": "Maximum number of pages that the crawler will open. The crawl will stop when this limit is reached.",
+      "prefill": 10,
+      "default": 10,
+      "editor": "number"
+    },
+    "proxyConfiguration": {
+      "title": "Proxy configuration",
+      "type": "object",
+      "editor": "proxy",
+      "description": "The best option is usually Automatic proxy. But you can also use your own proxies or no proxy",
+      "prefill": {
+        "useApifyProxy": true
+      },
+      "default": {
+        "useApifyProxy": true
+      },
+      "sectionCaption": "Proxy and browser configuration"
+    }
+  },
+  "required": ["startUrls", "handlePageTimeoutSecs", "maxRequestRetries", "minConcurrency", "maxConcurrency", "maxRequestsPerCrawl", "proxyConfiguration"]
 }
