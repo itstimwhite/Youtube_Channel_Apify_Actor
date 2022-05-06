@@ -52,7 +52,7 @@ module.exports = async ({ page, request, session, response }) => {
         CHANNEL_SUBSCRIBER_COUNT_XP,
         JOINED_DATE_XP,
         TOTAL_VIEW_COUNT_XP,
-        CHANNEL_LOCATION_XP,
+        CHANNEL_DETAILS_XP,
         CHANNEL_DESCRIPTION_XP,
         CHANNEL_PROFILE_IMAGE_XP,
     } = constants.SELECTORS_XP;
@@ -79,7 +79,7 @@ module.exports = async ({ page, request, session, response }) => {
     * @TODO This is a fragile way to get the location, since if another attribute is added to the details section,
     *   it will broke. A better approach is to get a array of attribute name / value.
     * */
-    const channelLocation = await utils.getDataFromXpath(page, CHANNEL_LOCATION_XP, 'innerHTML')
+    const channelLocation = await utils.getDataFromDetailsTable(page, CHANNEL_DETAILS_XP, 'Location')
         .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelLocation-failed'));
     log.debug(`Got channelLocation as ${channelLocation}`);
 
@@ -176,7 +176,7 @@ module.exports = async ({ page, request, session, response }) => {
         if (xpathCategory === null) {
             return null;
         } else {
-            return xpathCategory.textContent;
+            return xpathCategory.textContent.trim();
         }
     });
     log.debug(`Got verifiedCategory as ${verifiedCategory}`);

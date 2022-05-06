@@ -5,7 +5,8 @@
     "dependencies": {
         "apify": "^2.2.1",
         "dotenv": "^16.0.0",
-        "puppeteer": "^10.4.0"
+        "puppeteer": "^10.4.0",
+        "ytsr": "^3.8.0"
     },
     "scripts": {
         "start": "node main.js",

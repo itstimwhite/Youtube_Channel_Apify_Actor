@@ -6,6 +6,25 @@ exports.getDataFromXpath = async (page, xPath, attrib) => {
     return page.evaluate((el, key) => el[key], xElement[0], attrib);
 };
 
+exports.getDataFromDetailsTable = async (page, detailsTableXpath, attrib) => {
+    let value = '';
+
+    const rows = await page.$x(detailsTableXpath);
+    for (const row of rows) {
+        const columns = await row.$$('td:not([hidden])');
+        for (let i = 0; i <= columns.length; i += 2) {
+            const label = await page.evaluate(el => el?.textContent?.trim(), columns[i]);
+
+            if (label?.startsWith(attrib)) {
+                value = await page.evaluate(el => el?.textContent?.trim(), columns[i + 1]);
+                break;
+            }
+        }
+    }
+
+    return (value);
+};
+
 exports.unformatNumbers = (numStr) => {
     const numberMatch = numStr.replace(/[^0-9,.]/ig, '');
     if (numberMatch) {

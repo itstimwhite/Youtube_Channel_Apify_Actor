@@ -2,6 +2,7 @@ require('dotenv').config();
 
 const Apify = require('apify');
 const { log, puppeteer } = Apify.utils;
+const ytsr = require('ytsr');
 const utils = require('./src/utility');
 const handlePageFunction = require('./src/handlePageFunction');
 
@@ -12,17 +13,29 @@ Apify.main(async () => {
         throw 'Invalid input. Check apify_storage/key_value_stores/default/INPUT.json file.';
 
     const {
+        keywords,
+        limit = 5,
         startUrls = [],
         handlePageTimeoutSecs,
         maxRequestRetries,
-        minConcurrency,
-        maxConcurrency,
+        minConcurrency = 1,
+        maxConcurrency = 1,
         maxRequestsPerCrawl,
         proxyConfiguration
     } = input;
 
     if (process.env?.VERBOSE_LOG?.toLowerCase() === 'true') {
         log.setLevel(log.LEVELS.DEBUG);
+    }
+
+    for (const keyword of keywords) {
+        const results = await ytsr(keyword, { limit });
+
+        for (const entry of results?.items) {
+            const url = entry?.author?.url;
+            const includes = startUrls.findIndex(v => v.url === url) !== -1;
+            if (url && !includes) startUrls.push({ url });
+        }
     }
 
     const requestList = await Apify.openRequestList(null, startUrls);

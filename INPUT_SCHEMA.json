@@ -4,6 +4,24 @@
   "type": "object",
   "schemaVersion": 1,
   "properties": {
+    "keywords": {
+      "title": "Search Keywords",
+      "type": "array",
+      "description": "Provide some keywords for Youtube channel search.",
+      "prefill": ["reactjs"],
+      "default": [],
+      "editor": "requestListSources",
+      "sectionCaption": "Search Keywords"
+    },
+    "limit": {
+      "title": "Search Results Limit",
+      "type": "integer",
+      "description": "Search results limit for each search keyword.",
+      "prefill": 5,
+      "default": 5,
+      "editor": "number",
+      "sectionCaption": "Search Results Limit"
+    },
     "startUrls": {
       "title": "Direct URLs",
       "type": "array",
