@@ -10,7 +10,7 @@
       "description": "Provide some keywords for Youtube channel search.",
       "prefill": ["reactjs"],
       "default": [],
-      "editor": "requestListSources",
+      "editor": "stringList",
       "sectionCaption": "Search Keywords"
     },
     "limit": {
