@@ -68,8 +68,8 @@
       "title": "Max Requests Per Crawl",
       "type": "integer",
       "description": "Maximum number of pages that the crawler will open. The crawl will stop when this limit is reached.",
-      "prefill": 10,
-      "default": 10,
+      "prefill": 100,
+      "default": 100,
       "editor": "number"
     },
     "proxyConfiguration": {
