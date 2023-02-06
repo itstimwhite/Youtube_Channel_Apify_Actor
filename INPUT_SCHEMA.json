@@ -17,16 +17,21 @@
       "title": "Search Results Limit",
       "type": "integer",
       "description": "Search results limit for each search keyword.",
-      "prefill": 5,
       "default": 5,
+      "sectionCaption": "Limits",
+      "sectionDescription": "Limit the number of results",
       "editor": "number",
-      "sectionCaption": "Search Results Limit"
+      "prefill": 5
     },
     "startUrls": {
       "title": "Direct URLs",
       "type": "array",
       "description": "Provide some direct Youtube channel urls.",
-      "prefill": [{ "url": "https://www.youtube.com/c/SydneySerena/" }],
+      "prefill": [
+        {
+          "url": "https://www.youtube.com/c/SydneySerena/"
+        }
+      ],
       "default": [],
       "editor": "requestListSources",
       "sectionCaption": "Direct URLs"
@@ -44,9 +49,9 @@
       "title": "Max Request Retries",
       "type": "integer",
       "description": "Indicates how many times the request is retried if BasicCrawlerOptions.handleRequestFunction fails.",
-      "prefill": 1,
-      "default": 1,
-      "editor": "number"
+      "default": 3,
+      "editor": "number",
+      "prefill": 3
     },
     "minConcurrency": {
       "title": "Min Concurrency",
@@ -68,9 +73,10 @@
       "title": "Max Requests Per Crawl",
       "type": "integer",
       "description": "Maximum number of pages that the crawler will open. The crawl will stop when this limit is reached.",
+      "sectionCaption": "Limits",
+      "editor": "number",
       "prefill": 100,
-      "default": 100,
-      "editor": "number"
+      "nullable": true
     },
     "proxyConfiguration": {
       "title": "Proxy configuration",

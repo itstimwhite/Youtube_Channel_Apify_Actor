@@ -1,20 +1,20 @@
 {
-    "name": "youtube-channel-apify-actor",
-    "version": "0.0.1",
-    "description": "This is actor accepts YouTube channel URLs and returns details from their corresponding 'about' pages.",
-    "dependencies": {
-        "apify": "^2.2.1",
-        "dotenv": "^16.0.0",
-        "puppeteer": "^10.4.0",
-        "ytsr": "^3.8.0"
-    },
-    "scripts": {
-        "start": "node main.js",
-        "test": "echo \"Error: oops, the actor has no tests yet, sad!\" && exit 1"
-    },
-    "author": "Tim White",
-    "license": "MIT",
-    "devDependencies": {
-        "mocha": "^9.1.4"
-    }
+  "name": "youtube-channel-apify-actor",
+  "version": "0.0.1",
+  "description": "This is actor accepts YouTube channel URLs and returns details from their corresponding 'about' pages.",
+  "dependencies": {
+    "apify": "^2.2.1",
+    "dotenv": "^16.0.0",
+    "puppeteer": "^10.4.0",
+    "ytsr": "^3.8.0"
+  },
+  "scripts": {
+    "start": "node main.js",
+    "test": "echo \"Error: oops, the actor has no tests yet, sad!\" && exit 1"
+  },
+  "author": "Tim White",
+  "license": "MIT",
+  "devDependencies": {
+    "mocha": "^9.1.4"
+  }
 }
