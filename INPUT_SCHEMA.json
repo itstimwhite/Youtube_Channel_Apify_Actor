@@ -19,7 +19,7 @@
       "description": "Search results limit for each search keyword.",
       "default": 5,
       "sectionCaption": "Limits",
-      "sectionDescription": "Limit the number of results",
+      "sectionDescription": "Limit the number of results from the scraper",
       "editor": "number",
       "prefill": 5
     },
@@ -74,6 +74,7 @@
       "type": "integer",
       "description": "Maximum number of pages that the crawler will open. The crawl will stop when this limit is reached.",
       "sectionCaption": "Limits",
+      "sectionDescription": "Limit the number of results from the scraper",
       "editor": "number",
       "prefill": 100,
       "nullable": true
