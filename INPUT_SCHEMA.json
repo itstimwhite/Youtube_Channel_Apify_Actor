@@ -18,10 +18,18 @@
       "type": "integer",
       "description": "Search results limit for each search keyword.",
       "default": 5,
-      "sectionCaption": "Limits",
+      "sectionCaption": "Crawl Limits",
       "sectionDescription": "Limit the number of results from the scraper",
       "editor": "number",
       "prefill": 5
+    },
+    "maxRequestsPerCrawl": {
+      "title": "Max Requests Per Crawl",
+      "type": "integer",
+      "description": "Maximum number of pages that the crawler will open. The crawl will stop when this limit is reached.",
+      "editor": "number",
+      "prefill": 100,
+      "nullable": true
     },
     "startUrls": {
       "title": "Direct URLs",
@@ -69,16 +77,7 @@
       "default": 100,
       "editor": "number"
     },
-    "maxRequestsPerCrawl": {
-      "title": "Max Requests Per Crawl",
-      "type": "integer",
-      "description": "Maximum number of pages that the crawler will open. The crawl will stop when this limit is reached.",
-      "sectionCaption": "Limits",
-      "sectionDescription": "Limit the number of results from the scraper",
-      "editor": "number",
-      "prefill": 100,
-      "nullable": true
-    },
+
     "proxyConfiguration": {
       "title": "Proxy configuration",
       "type": "object",
