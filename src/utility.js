@@ -1,5 +1,11 @@
 const Apify = require('apify');
 
+exports.getDataFromSelector = async (page, selector, attrib) => {
+    await page.waitForSelector(selector, { timeout: 120 });
+    const element = await page.$(selector);
+    return page.evaluate((el, key) => el[key], element, attrib);
+};
+
 exports.getDataFromXpath = async (page, xPath, attrib) => {
     await page.waitForXPath(xPath, { timeout: 120 });
     const xElement = await page.$x(xPath);

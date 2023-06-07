@@ -1,6 +1,6 @@
 exports.SELECTORS_XP = {
-    CHANNEL_NAME_XP: '//*[@id="header"]/div[2]/div[2]/div/div[1]/div/div[1]/ytd-channel-name/div/div/yt-formatted-string',
-    CHANNEL_SUBSCRIBER_COUNT_XP: '//*[@id="subscriber-count"]',
+    CHANNEL_NAME_SELECTOR: 'yt-formatted-string.ytd-channel-name',
+    CHANNEL_SUBSCRIBER_COUNT_SELECTOR: '#subscriber-count',
     JOINED_DATE_XP: '//*[@id="right-column"]/yt-formatted-string[2]/span[2]',
     TOTAL_VIEW_COUNT_XP: '//*[@id="right-column"]/yt-formatted-string[3]',
     CHANNEL_DESCRIPTION_XP: '//*[@id="primary"]//*[@id="description-container"]//*[@id="description"]',

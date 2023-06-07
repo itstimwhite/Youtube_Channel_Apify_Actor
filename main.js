@@ -29,12 +29,16 @@ Apify.main(async () => {
     }
 
     for (const keyword of keywords) {
-        const results = await ytsr(keyword, { limit });
+        try {
+            const results = await ytsr(keyword, { limit });
 
-        for (const entry of results?.items) {
-            const url = entry?.author?.url;
-            const includes = startUrls.findIndex(v => v.url === url) !== -1;
-            if (url && !includes) startUrls.push({ url });
+            for (const entry of results?.items) {
+                const url = entry?.author?.url;
+                const includes = startUrls.findIndex(v => v.url === url) !== -1;
+                if (url && !includes) startUrls.push({ url });
+            }
+        } catch {
+            log.error(`Error trying to fetch results from query ${keyword}`);
         }
     }
 

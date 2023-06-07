@@ -48,8 +48,8 @@ module.exports = async ({ page, request, session, response }) => {
     }
 
     const {
-        CHANNEL_NAME_XP,
-        CHANNEL_SUBSCRIBER_COUNT_XP,
+        CHANNEL_NAME_SELECTOR,
+        CHANNEL_SUBSCRIBER_COUNT_SELECTOR,
         JOINED_DATE_XP,
         TOTAL_VIEW_COUNT_XP,
         CHANNEL_DETAILS_XP,
@@ -57,11 +57,11 @@ module.exports = async ({ page, request, session, response }) => {
         CHANNEL_PROFILE_IMAGE_XP,
     } = constants.SELECTORS_XP;
 
-    const channelName = await utils.getDataFromXpath(page, CHANNEL_NAME_XP, 'innerHTML')
+    const channelName = await utils.getDataFromSelector(page, CHANNEL_NAME_SELECTOR, 'innerHTML')
         .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelName-failed'));
     log.debug(`Got channelName as ${channelName}`);
 
-    const channelSubscriberCount = await utils.getDataFromXpath(page, CHANNEL_SUBSCRIBER_COUNT_XP, 'innerHTML')
+    const channelSubscriberCount = await utils.getDataFromSelector(page, CHANNEL_SUBSCRIBER_COUNT_SELECTOR, 'innerHTML')
         .then(str => utils.unformatNumbers(str))
         .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelSubscriberCount-failed'));
     log.debug(`Got channelSubscriberCount as ${channelSubscriberCount}`);
