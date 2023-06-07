@@ -50,6 +50,7 @@ module.exports = async ({ page, request, session, response }) => {
     const {
         CHANNEL_NAME_SELECTOR,
         CHANNEL_SUBSCRIBER_COUNT_SELECTOR,
+        CHANNEL_VIDEOS_COUNT_SELECTOR,
         JOINED_DATE_XP,
         TOTAL_VIEW_COUNT_XP,
         CHANNEL_DETAILS_XP,
@@ -57,21 +58,26 @@ module.exports = async ({ page, request, session, response }) => {
         CHANNEL_PROFILE_IMAGE_XP,
     } = constants.SELECTORS_XP;
 
-    const channelName = await utils.getDataFromSelector(page, CHANNEL_NAME_SELECTOR, 'innerHTML')
+    const channelName = await utils.getDataFromSelector(page, CHANNEL_NAME_SELECTOR, 'innerText')
         .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelName-failed'));
     log.debug(`Got channelName as ${channelName}`);
 
-    const channelSubscriberCount = await utils.getDataFromSelector(page, CHANNEL_SUBSCRIBER_COUNT_SELECTOR, 'innerHTML')
+    const channelSubscriberCount = await utils.getDataFromSelector(page, CHANNEL_SUBSCRIBER_COUNT_SELECTOR, 'innerText')
         .then(str => utils.unformatNumbers(str))
         .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelSubscriberCount-failed'));
     log.debug(`Got channelSubscriberCount as ${channelSubscriberCount}`);
 
-    const totalViewCount = await utils.getDataFromXpath(page, TOTAL_VIEW_COUNT_XP, 'innerHTML')
+    const channelVideosCount = await utils.getDataFromSelector(page, CHANNEL_VIDEOS_COUNT_SELECTOR, 'innerText')
+        .then(str => utils.unformatNumbers(str))
+        .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelVideosCount-failed'));
+    log.debug(`Got channelVideosCount as ${channelVideosCount}`);
+
+    const totalViewCount = await utils.getDataFromXpath(page, TOTAL_VIEW_COUNT_XP, 'innerText')
         .then(str => utils.unformatNumbers(str))
         .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-totalViewCount-failed'));
     log.debug(`Got totalViewCountStr as ${totalViewCount}`);
 
-    const joinedDate = await utils.getDataFromXpath(page, JOINED_DATE_XP, 'innerHTML')
+    const joinedDate = await utils.getDataFromXpath(page, JOINED_DATE_XP, 'innerText')
         .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-joinedDate-failed'));
     log.debug(`Got joinedDate as ${joinedDate}`);
 
@@ -83,7 +89,7 @@ module.exports = async ({ page, request, session, response }) => {
         .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelLocation-failed'));
     log.debug(`Got channelLocation as ${channelLocation}`);
 
-    const channelDescription = await utils.getDataFromXpath(page, CHANNEL_DESCRIPTION_XP, 'innerHTML')
+    const channelDescription = await utils.getDataFromXpath(page, CHANNEL_DESCRIPTION_XP, 'innerText')
         .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelDescription-failed'));
     log.debug(`Got channelDescription as ${channelDescription}`);
 
@@ -197,6 +203,7 @@ module.exports = async ({ page, request, session, response }) => {
         channelEmail,
         channelPhone,
         channelSubscriberCount,
+        channelVideosCount,
         joinedDate,
         totalViewCount,
         channelLocation,
