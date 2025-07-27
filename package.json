@@ -2,11 +2,12 @@
   "name": "youtube-channel-apify-actor",
   "version": "0.0.1",
   "description": "This is actor accepts YouTube channel URLs and returns details from their corresponding 'about' pages.",
+  "type": "module",
   "dependencies": {
-    "apify": "^2.2.1",
-    "dotenv": "^16.0.0",
-    "puppeteer": "^10.4.0",
-    "ytsr": "^3.8.2"
+    "apify": "^3.3.0",
+    "crawlee": "^3.13.0",
+    "puppeteer": "^24.15.0",
+    "ytsr": "^3.8.4"
   },
   "scripts": {
     "start": "node main.js",
@@ -15,6 +16,6 @@
   "author": "Tim White",
   "license": "MIT",
   "devDependencies": {
-    "mocha": "^9.1.4"
+    "mocha": "^11.7.1"
   }
 }

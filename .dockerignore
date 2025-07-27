@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+
+# Apify storage
+apify_storage/
+storage/
+
+# Environment files
+.env*
+
+# Logs
+logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.idea/
+.vscode/
+.claude/
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+*.md
+
+# Test files
+test/
+tests/
+*.test.js
+*.spec.js
+
+# Temporary files
+*.tmp
+*.temp
+.actor/
+
+# Build files
+dist/
+build/

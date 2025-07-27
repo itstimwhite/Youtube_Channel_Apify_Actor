@@ -44,7 +44,7 @@
       "editor": "requestListSources",
       "sectionCaption": "Direct URLs"
     },
-    "handlePageTimeoutSecs": {
+    "requestHandlerTimeoutSecs": {
       "title": "Handle Page Timeout Secs",
       "type": "integer",
       "description": "Timeout in which the function passed as handlePageFunction needs to finish, in seconds.",
@@ -77,20 +77,16 @@
       "default": 100,
       "editor": "number"
     },
-
     "proxyConfiguration": {
-      "title": "Proxy configuration",
+      "title": "Proxy Configuration",
       "type": "object",
-      "editor": "proxy",
-      "description": "The best option is usually Automatic proxy. But you can also use your own proxies or no proxy",
+      "description": "Select proxies to be used by your crawler.",
       "prefill": {
         "useApifyProxy": true
       },
-      "default": {
-        "useApifyProxy": true
-      },
+      "editor": "proxy",
       "sectionCaption": "Proxy and browser configuration"
     }
   },
-  "required": ["handlePageTimeoutSecs", "maxRequestRetries", "minConcurrency", "maxConcurrency", "maxRequestsPerCrawl", "proxyConfiguration"]
+  "required": []
 }

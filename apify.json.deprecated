@@ -1,0 +1,8 @@
+{
+    "name": "youtube-channel-apify-actor",
+    "version": "0.0.1",
+    "buildTag": "latest",
+    "env": {
+        "npm_config_loglevel": "silent"
+    }
+}

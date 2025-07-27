@@ -1,229 +1,512 @@
-const Apify = require('apify');
-const { log } = Apify.utils;
-const constants = require('./constants');
-const utils = require('./utility');
+/**
+ * Page handler for YouTube Channel Scraper
+ * Extracts channel information from YouTube about pages
+ */
 
-module.exports = async ({ page, request, session, response }) => {
-    log.info(`Starting data extraction for ${request.url}`);
+import { Actor, log } from 'apify';
+import { social } from 'crawlee';
+import * as constants from './constants.js';
+import * as utils from './utility.js';
 
-    const captchaFrame = await page.frames().find(f => f.name().startsWith('a-'));
-    if (captchaFrame) {
-        const hasCaptcha = await captchaFrame.waitForSelector('div.recaptcha-checkbox-border');
-        if (hasCaptcha) {
-            session.retire();
-            throw 'Got captcha, page will be retried. If this happens often, consider increasing number of proxies';
+/**
+ * Extracts data from YouTube's ytInitialData object
+ * @param {Object} page - Puppeteer page instance
+ * @returns {Promise<Object>} Extracted data from ytInitialData
+ */
+async function extractYouTubeData(page) {
+    try {
+        const ytData = await page.evaluate(() => {
+            // Try multiple possible locations for YouTube's data
+            return window.ytInitialData || 
+                   window.ytInitialPlayerResponse || 
+                   window.ytcfg?.data_ || 
+                   {};
+        });
+        
+        return ytData;
+    } catch (error) {
+        log.debug('Failed to extract YouTube data object:', error.message);
+        return {};
+    }
+}
+
+/**
+ * Extracts channel metadata from ytInitialData
+ * @param {Object} ytData - YouTube's initial data object
+ * @returns {Object} Extracted channel metadata
+ */
+function extractChannelMetadata(ytData) {
+    const metadata = {
+        channelName: '',
+        subscriberCount: '',
+        videoCount: '',
+        description: '',
+        joinedDate: '',
+        viewCount: '',
+        location: '',
+        links: []
+    };
+    
+    try {
+        // Try to find channel header data
+        const header = ytData?.header?.c4TabbedHeaderRenderer || 
+                      ytData?.header?.pageHeaderRenderer?.content?.pageHeaderViewModel;
+        
+        if (header) {
+            // Extract channel name from various possible locations
+            metadata.channelName = header.title || 
+                                 header.title?.simpleText || 
+                                 header.dynamicTextViewModel?.text?.content ||
+                                 '';
+            
+            // Extract subscriber count
+            metadata.subscriberCount = header.subscriberCountText?.simpleText || 
+                                     header.subscriberCountText?.runs?.[0]?.text ||
+                                     '';
+            
+            // Extract video count
+            metadata.videoCount = header.videosCountText?.runs?.[0]?.text || 
+                                header.videosCount?.simpleText ||
+                                '';
         }
+        
+        // Try to find about page data
+        const tabs = ytData?.contents?.twoColumnBrowseResultsRenderer?.tabs || [];
+        const aboutTab = tabs.find(tab => tab?.tabRenderer?.title === 'About' || tab?.tabRenderer?.selected);
+        
+        if (aboutTab) {
+            const aboutData = aboutTab?.tabRenderer?.content?.sectionListRenderer?.contents?.[0]
+                ?.itemSectionRenderer?.contents?.[0]?.channelAboutFullMetadataRenderer;
+            
+            if (aboutData) {
+                metadata.description = aboutData.description?.simpleText || '';
+                metadata.location = aboutData.country?.simpleText || '';
+                metadata.joinedDate = aboutData.joinedDateText?.runs?.[1]?.text || '';
+                metadata.viewCount = aboutData.viewCountText?.simpleText || '';
+                
+                // Extract links
+                const primaryLinks = aboutData.primaryLinks || [];
+                const otherLinks = aboutData.otherLinks || [];
+                metadata.links = [...primaryLinks, ...otherLinks].map(link => ({
+                    title: link.title?.simpleText || '',
+                    url: link.navigationEndpoint?.urlEndpoint?.url || ''
+                }));
+            }
+        }
+        
+    } catch (error) {
+        log.debug('Error parsing YouTube data structure:', error.message);
     }
+    
+    return metadata;
+}
 
-    const statusCode = +response.status();
-    if (statusCode >= 400) {
-        session.retire();
-        throw `Response status is: ${response.status()} msg: ${response.statusText()}`;
+/**
+ * Checks for CAPTCHA presence on the page
+ * @param {Object} page - Puppeteer page instance
+ * @returns {Promise<boolean>} True if CAPTCHA detected
+ */
+async function checkForCaptcha(page) {
+    const captchaFrame = await page.frames().find(f => f.name().startsWith('a-'));
+    if (!captchaFrame) return false;
+    
+    const hasCaptcha = await captchaFrame
+        .waitForSelector(constants.CSS_SELECTORS.CAPTCHA_FRAME, { 
+            timeout: constants.TIMEOUTS.CAPTCHA_CHECK 
+        })
+        .catch(() => null);
+    
+    return !!hasCaptcha;
+}
+
+/**
+ * Handles consent dialog if present
+ * @param {Object} page - Puppeteer page instance
+ * @returns {Promise<boolean>} True if consent was handled
+ */
+async function handleConsentDialog(page) {
+    if (!page.url().includes('consent')) return false;
+    
+    log.debug('Handling consent dialog');
+    
+    try {
+        await Promise.all([
+            page.$eval(constants.CSS_SELECTORS.CONSENT_FORM, (form) => {
+                const button = form.querySelector('button');
+                if (button) button.click();
+            }),
+            page.waitForNavigation({ 
+                waitUntil: 'networkidle2',
+                timeout: constants.TIMEOUTS.NAVIGATION 
+            }),
+        ]);
+        return true;
+    } catch (error) {
+        log.warning('Failed to handle consent dialog:', error.message);
+        return false;
     }
+}
 
-    if (await page.$('.yt-upsell-dialog-renderer')) {
-        await page.evaluate(async () => {
-            const noThanks = document.querySelectorAll('.yt-upsell-dialog-renderer [role="button"]');
+/**
+ * Dismisses upsell dialog if present
+ * @param {Object} page - Puppeteer page instance
+ */
+async function dismissUpsellDialog(page) {
+    const upsellDialog = await page.$(constants.CSS_SELECTORS.UPSELL_DIALOG);
+    if (!upsellDialog) return;
+    
+    await page.evaluate(() => {
+        const buttons = document.querySelectorAll('.yt-upsell-dialog-renderer [role="button"]');
+        for (const button of buttons) {
+            if (button.textContent?.includes('No thanks')) {
+                button.click();
+                break;
+            }
+        }
+    });
+}
 
-            for (const button of noThanks) {
-                if (button.textContent && button.textContent.includes('No thanks')) {
-                    button.click();
-                    break;
+/**
+ * Waits for page content to be fully loaded
+ * @param {Object} page - Puppeteer page instance
+ */
+async function waitForContent(page) {
+    try {
+        // Wait for any of these key elements to appear
+        await Promise.race([
+            page.waitForSelector(constants.CSS_SELECTORS.CHANNEL_NAME, { timeout: constants.TIMEOUTS.ELEMENT_WAIT }),
+            page.waitForSelector(constants.CSS_SELECTORS.ABOUT_SECTION, { timeout: constants.TIMEOUTS.ELEMENT_WAIT }),
+            page.waitForSelector('#content', { timeout: constants.TIMEOUTS.ELEMENT_WAIT }),
+        ]);
+        
+        // Additional wait for dynamic content
+        await new Promise(resolve => setTimeout(resolve, 2000));
+    } catch (error) {
+        log.warning('Timeout waiting for content to load');
+    }
+}
+
+/**
+ * Extracts basic channel information with multiple fallback strategies
+ * @param {Object} page - Puppeteer page instance
+ * @param {Object} ytData - YouTube's data object
+ * @returns {Promise<Object>} Channel basic info
+ */
+async function extractBasicInfo(page, ytData) {
+    const metadata = extractChannelMetadata(ytData);
+    
+    // Try DOM selectors as fallback
+    const [channelName, subscriberCount, avatarUrl] = await Promise.all([
+        // Channel name
+        utils.getDataFromSelector(page, constants.CSS_SELECTORS.CHANNEL_NAME, 'innerText', 3000)
+            .then(name => name || metadata.channelName)
+            .catch(() => metadata.channelName),
+        
+        // Subscriber count
+        utils.getDataFromSelector(page, constants.CSS_SELECTORS.SUBSCRIBER_COUNT, 'innerText', 3000)
+            .then(count => count || metadata.subscriberCount)
+            .catch(() => metadata.subscriberCount),
+        
+        // Avatar image
+        utils.getDataFromSelector(page, constants.CSS_SELECTORS.AVATAR_IMAGE, 'src', 3000)
+            .catch(() => null),
+    ]);
+    
+    // Clean up channel name if it's an object
+    let cleanChannelName = channelName || metadata.channelName;
+    if (typeof cleanChannelName === 'object') {
+        cleanChannelName = cleanChannelName?.dynamicTextViewModel?.text?.content || 
+                          cleanChannelName?.simpleText || 
+                          cleanChannelName?.text || 
+                          'Unknown Channel';
+    }
+    
+    return {
+        channelName: cleanChannelName || 'Unknown Channel',
+        channelSubscriberCount: subscriberCount ? utils.unformatNumbers(subscriberCount) : 0,
+        channelVideosCount: metadata.videoCount ? utils.unformatNumbers(metadata.videoCount) : 0,
+        channelProfileImageURL: avatarUrl || '',
+        metadata // Include raw metadata for additional processing
+    };
+}
+
+/**
+ * Extracts detailed channel information
+ * @param {Object} page - Puppeteer page instance
+ * @param {Object} metadata - Metadata from ytInitialData
+ * @returns {Promise<Object>} Channel detailed info
+ */
+async function extractDetailedInfo(page, metadata) {
+    // Use metadata first, then try DOM selectors as fallback
+    const [joinedDate, totalViewCount, channelLocation, channelDescription] = await Promise.all([
+        // Joined date
+        metadata.joinedDate || 
+        utils.getDataFromXpath(page, constants.XPATH_SELECTORS.JOINED_DATE, 'innerText', 3000)
+            .catch(() => ''),
+        
+        // Total view count
+        metadata.viewCount ||
+        utils.getDataFromXpath(page, constants.XPATH_SELECTORS.TOTAL_VIEW_COUNT, 'innerText', 3000)
+            .catch(() => ''),
+        
+        // Location
+        metadata.location ||
+        utils.getDataFromDetailsTable(page, constants.XPATH_SELECTORS.CHANNEL_DETAILS_TABLE, 'Location')
+            .catch(() => ''),
+        
+        // Description
+        metadata.description ||
+        utils.getDataFromXpath(page, constants.XPATH_SELECTORS.CHANNEL_DESCRIPTION, 'innerText', 3000)
+            .catch(() => ''),
+    ]);
+    
+    return {
+        joinedDate: joinedDate || '',
+        totalViewCount: totalViewCount ? utils.unformatNumbers(totalViewCount) : 0,
+        channelLocation: channelLocation || '',
+        channelDescription: channelDescription || '',
+        channelLinks: metadata.links || []
+    };
+}
+
+/**
+ * Extracts all URLs from the page
+ * @param {Object} page - Puppeteer page instance
+ * @param {Array} metadataLinks - Links from metadata
+ * @returns {Promise<string[]>} Array of URLs
+ */
+async function extractAllUrls(page, metadataLinks = []) {
+    try {
+        const pageUrls = await page.evaluate(() => {
+            const anchors = Array.from(document.querySelectorAll('a'));
+            return anchors
+                .map(anchor => anchor.href)
+                .filter(href => href && href.startsWith('http'));
+        });
+        
+        // Combine with metadata links
+        const metadataUrls = metadataLinks.map(link => link.url).filter(url => url);
+        return [...new Set([...pageUrls, ...metadataUrls])];
+    } catch (error) {
+        log.debug('Error extracting URLs:', error.message);
+        return [];
+    }
+}
+
+/**
+ * Processes and categorizes social media URLs
+ * @param {string[]} allUrls - All URLs found on page
+ * @returns {Object} Categorized social media URLs
+ */
+function categorizeSocialUrls(allUrls) {
+    // Extract redirect URLs with 'q' parameter
+    const redirectUrls = utils.extractUrlParameters(allUrls, 'q');
+    
+    // Include direct URLs that aren't YouTube redirects
+    const directUrls = allUrls.filter(url => 
+        !url.includes('youtube.com/redirect') && 
+        !url.includes('youtube.com/@')
+    );
+    
+    const uniqueUrls = Array.from(new Set([...redirectUrls, ...directUrls]));
+    
+    // Categorize URLs by platform
+    const socialUrls = {
+        youtubeUrls: utils.filterUrlsByDomain(uniqueUrls, constants.SOCIAL_MEDIA_PATTERNS.YOUTUBE),
+        instagramUrls: utils.filterUrlsByDomain(uniqueUrls, constants.SOCIAL_MEDIA_PATTERNS.INSTAGRAM),
+        twitterUrls: utils.filterUrlsByDomain(uniqueUrls, constants.SOCIAL_MEDIA_PATTERNS.TWITTER),
+        facebookUrls: utils.filterUrlsByDomain(uniqueUrls, constants.SOCIAL_MEDIA_PATTERNS.FACEBOOK),
+        linkedinUrls: utils.filterUrlsByDomain(uniqueUrls, constants.SOCIAL_MEDIA_PATTERNS.LINKEDIN),
+        pinterestUrls: utils.filterUrlsByDomain(uniqueUrls, constants.SOCIAL_MEDIA_PATTERNS.PINTEREST),
+        redditUrls: utils.filterUrlsByDomain(uniqueUrls, constants.SOCIAL_MEDIA_PATTERNS.REDDIT),
+        tumblrUrls: utils.filterUrlsByDomain(uniqueUrls, constants.SOCIAL_MEDIA_PATTERNS.TUMBLR),
+        twitchUrls: utils.filterUrlsByDomain(uniqueUrls, constants.SOCIAL_MEDIA_PATTERNS.TWITCH),
+        onlyfansUrls: utils.filterUrlsByDomain(uniqueUrls, constants.SOCIAL_MEDIA_PATTERNS.ONLYFANS),
+        soundcloudUrls: utils.filterUrlsByDomain(uniqueUrls, constants.SOCIAL_MEDIA_PATTERNS.SOUNDCLOUD),
+        discordUrls: utils.filterUrlsByDomain(uniqueUrls, constants.SOCIAL_MEDIA_PATTERNS.DISCORD),
+        patreonUrls: utils.filterUrlsByDomain(uniqueUrls, constants.SOCIAL_MEDIA_PATTERNS.PATREON),
+        githubUrls: utils.filterUrlsByDomain(uniqueUrls, constants.SOCIAL_MEDIA_PATTERNS.GITHUB),
+    };
+    
+    // Special handling for TikTok (remove query params)
+    socialUrls.tiktokUrls = utils.filterUrlsByDomain(uniqueUrls, constants.SOCIAL_MEDIA_PATTERNS.TIKTOK)
+        .map(url => utils.cleanUrl(url));
+    
+    // Special handling for Spotify (must contain user or artist)
+    socialUrls.spotifyUrls = uniqueUrls.filter(url => 
+        constants.SOCIAL_MEDIA_PATTERNS.SPOTIFY.domains.some(domain => url.includes(domain)) &&
+        constants.SOCIAL_MEDIA_PATTERNS.SPOTIFY.requiredPaths.some(path => url.includes(path))
+    );
+    
+    // Generic websites (non-social media)
+    socialUrls.websiteUrls = uniqueUrls.filter(url => {
+        const isSocial = Object.keys(constants.SOCIAL_MEDIA_PATTERNS)
+            .filter(key => key !== 'WEBSITE')
+            .some(platform => {
+                const patterns = constants.SOCIAL_MEDIA_PATTERNS[platform];
+                if (Array.isArray(patterns)) {
+                    return patterns.some(pattern => url.includes(pattern));
+                } else if (patterns.domains) {
+                    return patterns.domains.some(domain => url.includes(domain));
+                }
+                return false;
+            });
+        return !isSocial && !url.includes('youtube.com');
+    });
+    
+    return socialUrls;
+}
+
+/**
+ * Extracts channel verification status
+ * @param {Object} page - Puppeteer page instance
+ * @returns {Promise<string|null>} Verification category or null
+ */
+async function extractVerificationStatus(page) {
+    try {
+        // Try multiple methods to find verification badge
+        const verifiedBadge = await page.evaluate(() => {
+            // Look for verified badge tooltip
+            const badges = document.querySelectorAll('ytd-badge-supported-renderer');
+            for (const badge of badges) {
+                const tooltip = badge.querySelector('tp-yt-paper-tooltip div');
+                if (tooltip && tooltip.textContent) {
+                    return tooltip.textContent.trim();
                 }
             }
-        });
-    }
-
-    if (page.url().includes('consent')) {
-        log.debug('Clicking consent dialog');
-
-        await Promise.all([
-            page.$eval('form[action*="consent"]', (el) => {
-                el.querySelector('button')?.click();
-            }),
-            page.waitForNavigation({ waitUntil: 'networkidle2' }),
-        ]);
-
-        session.retire();
-    }
-
-    const {
-        CHANNEL_NAME_SELECTOR,
-        CHANNEL_SUBSCRIBER_COUNT_SELECTOR,
-        CHANNEL_VIDEOS_COUNT_SELECTOR,
-        JOINED_DATE_XP,
-        TOTAL_VIEW_COUNT_XP,
-        CHANNEL_DETAILS_XP,
-        CHANNEL_DESCRIPTION_XP,
-        CHANNEL_PROFILE_IMAGE_XP,
-    } = constants.SELECTORS_XP;
-
-    const channelName = await utils.getDataFromSelector(page, CHANNEL_NAME_SELECTOR, 'innerText')
-        .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelName-failed'));
-    log.debug(`Got channelName as ${channelName}`);
-
-    const channelSubscriberCount = await utils.getDataFromSelector(page, CHANNEL_SUBSCRIBER_COUNT_SELECTOR, 'innerText')
-        .then(str => utils.unformatNumbers(str))
-        .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelSubscriberCount-failed'));
-    log.debug(`Got channelSubscriberCount as ${channelSubscriberCount}`);
-
-    const channelVideosCount = await utils.getDataFromSelector(page, CHANNEL_VIDEOS_COUNT_SELECTOR, 'innerText')
-        .then(str => utils.unformatNumbers(str))
-        .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelVideosCount-failed'));
-    log.debug(`Got channelVideosCount as ${channelVideosCount}`);
-
-    const totalViewCount = await utils.getDataFromXpath(page, TOTAL_VIEW_COUNT_XP, 'innerText')
-        .then(str => utils.unformatNumbers(str))
-        .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-totalViewCount-failed'));
-    log.debug(`Got totalViewCountStr as ${totalViewCount}`);
-
-    const joinedDate = await utils.getDataFromXpath(page, JOINED_DATE_XP, 'innerText')
-        .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-joinedDate-failed'));
-    log.debug(`Got joinedDate as ${joinedDate}`);
-
-    /*
-    * @TODO This is a fragile way to get the location, since if another attribute is added to the details section,
-    *   it will broke. A better approach is to get a array of attribute name / value.
-    * */
-    const channelLocation = await utils.getDataFromDetailsTable(page, CHANNEL_DETAILS_XP, 'Location')
-        .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelLocation-failed'));
-    log.debug(`Got channelLocation as ${channelLocation}`);
-
-    const channelDescription = await utils.getDataFromXpath(page, CHANNEL_DESCRIPTION_XP, 'innerText')
-        .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelDescription-failed'));
-    log.debug(`Got channelDescription as ${channelDescription}`);
-
-    const channelProfileImageURL = await utils.getDataFromXpath(page, CHANNEL_PROFILE_IMAGE_XP, 'src')
-        .catch((e) => utils.handleErrorAndScreenshot(page, e, 'Getting-channelProfileImage-failed'));
-    log.debug(`Got channelProfileImage as ${channelProfileImageURL}`);
-
-    const allUrls = await page.evaluate(() => {
-        const anchors = Array.from(document.querySelectorAll('a'));
-        return anchors.map(anchor => anchor.href);
-    });
-
-    // Search for 'q' in the url in the array allUrls and output it to redirectUrls2
-    const redirectUrls2 = allUrls.filter(url => url.includes('q='));
-    if (redirectUrls2) log.debug(`Got redirectUrls2 as ${redirectUrls2.join(',')}`);
-
-    // Get the value of the 'q' parameter from the url in the array redirectUrls2
-    const redirectUrls3 = redirectUrls2.map(url => url.split('q=')[1]);
-    if (redirectUrls3) log.debug(`Got redirectUrls3 as ${redirectUrls3.join(',')}`);
-
-    // Decode the urls in the array redirectUrls3 and output it to redirectUrls4
-    const redirectUrls4 = redirectUrls3.map(url => decodeURIComponent(url));
-    if (redirectUrls4) log.debug(`Got redirectUrls4 as ${redirectUrls4.join(',')}`);
-
-    // Dedupe the urls in the array redirectUrls4 and output it to redirectUrls5
-    const redirectUrls5 = Array.from(new Set(redirectUrls4));
-    if (redirectUrls5) log.debug(`Got redirectUrls5 as ${redirectUrls5.join(',')}`);
-
-    // If a url in the array redirectUrls5 contains 'youtube' put it in a new array called youtubeUrls else put it in a new array called otherUrls
-    const youtubeUrls = redirectUrls5.filter(url => url.includes('youtube.com'));
-    if (youtubeUrls) log.debug(`Got youtubeUrls as ${youtubeUrls.join(',')}`);
-
-    // If a url in the array redirectUrls5 contains 'instagram' put it in a new array called instagramUrls
-    const instagramUrls = redirectUrls5.filter(url => url.includes('instagram.com'));
-    if (instagramUrls) log.debug(`Got instagramUrls as ${instagramUrls.join(',')}`);
-
-    // If a url in the array redirectUrls5 contains 'twitter' put it in a new array called twitterUrls
-    const twitterUrls = redirectUrls5.filter(url => url.includes('twitter.com'));
-    if (twitterUrls) log.debug(`Got twitterUrls as ${twitterUrls.join(',')}`);
-
-    // If a url in the array redirectUrls5 contains 'facebook' put it in a new array called facebookUrls
-    const facebookUrls = redirectUrls5.filter(url => url.includes('facebook.com' || 'fb.com'));
-    if (facebookUrls) log.debug(`Got facebookUrls as ${facebookUrls.join(',')}`);
-
-    // If a url in the array redirectUrls5 contains 'linkedin' put it in a new array called linkedinUrls
-    const linkedinUrls = redirectUrls5.filter(url => url.includes('linkedin.com'));
-    if (linkedinUrls) log.debug(`Got linkedinUrls as ${linkedinUrls.join(',')}`);
-
-    // If a url in the array redirectUrls5 contains 'pinterest' put it in a new array called pinterestUrls
-    const pinterestUrls = redirectUrls5.filter(url => url.includes('pinterest.com'));
-    if (pinterestUrls) log.debug(`Got pinterestUrls as ${pinterestUrls.join(',')}`);
-
-    // If a url in the array redirectUrls5 contains 'reddit' put it in a new array called redditUrls
-    const redditUrls = redirectUrls5.filter(url => url.includes('reddit.com'));
-    if (redditUrls) log.debug(`Got redditUrls as ${redditUrls.join(',')}`);
-
-    // If a url in the array redirectUrls5 contains 'tumblr' put it in a new array called tumblrUrls
-    const tumblrUrls = redirectUrls5.filter(url => url.includes('tumblr.com'));
-    if (tumblrUrls) log.debug(`Got tumblrUrls as ${tumblrUrls.join(',')}`);
-
-    // If a url in the array contains 'tiktok' put it in a new array called tiktokUrls
-    const tiktokUrls = redirectUrls5.filter(url => url.includes('tiktok.com'));
-    if (tiktokUrls) log.debug(`Got tiktokUrls as ${tiktokUrls.join(',')}`);
-
-    // If a url in the array contains 'tiktok' trim the url to remove the '?*" part and put it in a new array called tiktokUrls2"
-    const tiktokUrls2 = tiktokUrls.map(url => url.split('?')[0]);
-    if (tiktokUrls2) log.debug(`Got tiktokUrls2 as ${tiktokUrls2.join(',')}`);
-
-    // If a url in the array contains 'twitch' put it in a new array called twitchUrls
-    const twitchUrls = redirectUrls5.filter(url => url.includes('twitch'));
-    if (twitchUrls) log.debug(`Got twitchUrls as ${twitchUrls.join(',')}`);
-
-    // If a url in the array contains 'onlyfans' trim put it in a new array called onlyfansUrls
-    const onlyfansUrls = redirectUrls5.filter(url => url.includes('onlyfans'));
-    if (onlyfansUrls) log.debug(`Got onlyfansUrls as ${onlyfansUrls.join(',')}`);
-
-    // If a url in the array contains 'spotify' and ('user' or 'artist') put it in a new array called spotifyUrls
-    const spotifyUrls = redirectUrls5.filter(url => url.includes('spotify') && (url.includes('user') || url.includes('artist')));
-    if (spotifyUrls) log.debug(`Got spotifyUrls as ${spotifyUrls.join(',')}`);
-
-    // If a url in the array contains 'soundcloud' put it in a new array called soundcloudUrls
-    const soundcloudUrls = redirectUrls5.filter(url => url.includes('soundcloud'));
-    if (soundcloudUrls) log.debug(`Got soundcloudUrls as ${soundcloudUrls.join(',')}`);
-
-    /*  Look for 'xpathCategory' on the page. If not found, set category to null
-     *  If found, get the textContent of the element and set it as category
-     */
-    const verifiedCategory = await page.evaluate(() => {
-        const xpathCategory = document.evaluate('//*[@id="header"]/div[2]/div[2]/div/div[1]/div/div[1]/ytd-channel-name/ytd-badge-supported-renderer/div/tp-yt-paper-tooltip/div', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-        if (xpathCategory === null) {
+            
+            // Look for aria-label on badges
+            const ariaLabels = document.querySelectorAll('[aria-label*="Verified"]');
+            if (ariaLabels.length > 0) {
+                return 'Verified';
+            }
+            
             return null;
-        } else {
-            return xpathCategory.textContent.trim();
+        });
+        
+        return verifiedBadge;
+    } catch (error) {
+        log.debug('Error checking verification status:', error.message);
+        return null;
+    }
+}
+
+/**
+ * Extracts contact information from channel description
+ * @param {string} description - Channel description text
+ * @returns {Object} Contact information
+ */
+function extractContactInfo(description) {
+    if (!description) {
+        return { emails: [], phones: [] };
+    }
+    
+    return {
+        emails: social.emailsFromText(description),
+        phones: social.phonesFromText(description),
+    };
+}
+
+/**
+ * Main page handler function
+ * @param {Object} context - Crawlee context object
+ */
+const handlePageFunction = async ({ page, request, session, response }) => {
+    const startTime = Date.now();
+    log.info(`Processing channel: ${request.url}`);
+    
+    try {
+        // Check for CAPTCHA
+        if (await checkForCaptcha(page)) {
+            session.retire();
+            throw new Error(constants.ERROR_MESSAGES.CAPTCHA_DETECTED);
         }
-    });
-    log.debug(`Got verifiedCategory as ${verifiedCategory}`);
-
-
-    const channelURL = request.url.replace('/about', '');
-
-    const channelEmail = Apify.utils.social.emailsFromText(channelDescription);
-    log.debug(`Got email as ${channelEmail}`);
-
-    const channelPhone = Apify.utils.social.phonesFromText(channelDescription);
-    log.debug(`Got phone as ${channelPhone}`);
-
-    log.debug('Pushing item to dataset');
-    await Apify.pushData({
-        channelURL,
-        channelName,
-        channelEmail,
-        channelPhone,
-        channelSubscriberCount,
-        channelVideosCount,
-        joinedDate,
-        totalViewCount,
-        channelLocation,
-        channelDescription,
-        channelProfileImageURL,
-        youtubeUrls,
-        instagramUrls,
-        twitterUrls,
-        facebookUrls,
-        linkedinUrls,
-        pinterestUrls,
-        redditUrls,
-        tumblrUrls,
-        tiktokUrls,
-        twitchUrls,
-        onlyfansUrls,
-        spotifyUrls,
-        soundcloudUrls,
-        verifiedCategory
-    });
-
-    log.info(`Finished data extraction for ${request.url}`);
+        
+        // Validate response status
+        const statusCode = response.status();
+        if (statusCode >= 400) {
+            session.retire();
+            throw new Error(`${constants.ERROR_MESSAGES.INVALID_RESPONSE}: ${statusCode} ${response.statusText()}`);
+        }
+        
+        // Handle consent dialog
+        if (await handleConsentDialog(page)) {
+            session.retire();
+            return; // Page will be retried after consent
+        }
+        
+        // Dismiss any upsell dialogs
+        await dismissUpsellDialog(page);
+        
+        // Wait for content to load
+        await waitForContent(page);
+        
+        // Extract YouTube's data object first
+        const ytData = await extractYouTubeData(page);
+        
+        // Extract all data with fallback strategies
+        const basicInfo = await extractBasicInfo(page, ytData);
+        const detailedInfo = await extractDetailedInfo(page, basicInfo.metadata);
+        const allUrls = await extractAllUrls(page, detailedInfo.channelLinks);
+        const verifiedCategory = await extractVerificationStatus(page);
+        
+        // Process URLs and extract contact info
+        const socialUrls = categorizeSocialUrls(allUrls);
+        const contactInfo = extractContactInfo(detailedInfo.channelDescription);
+        
+        // Prepare final data object
+        const channelData = {
+            // Basic information
+            channelURL: request.url.replace('/about', ''),
+            channelName: basicInfo.channelName,
+            channelSubscriberCount: basicInfo.channelSubscriberCount,
+            channelVideosCount: basicInfo.channelVideosCount,
+            
+            // Detailed information
+            joinedDate: detailedInfo.joinedDate,
+            totalViewCount: detailedInfo.totalViewCount,
+            channelLocation: detailedInfo.channelLocation,
+            channelDescription: detailedInfo.channelDescription,
+            channelProfileImageURL: basicInfo.channelProfileImageURL,
+            
+            // Contact information
+            channelEmail: contactInfo.emails,
+            channelPhone: contactInfo.phones,
+            
+            // Social media links
+            ...socialUrls,
+            
+            // Verification status
+            verifiedCategory,
+            
+            // Metadata
+            scrapedAt: new Date().toISOString(),
+            processingTime: Date.now() - startTime,
+            dataSource: ytData ? 'ytInitialData' : 'DOM',
+        };
+        
+        // Save to dataset
+        await Actor.pushData(channelData);
+        
+        log.info(`Successfully scraped channel: ${basicInfo.channelName}`, {
+            subscribers: basicInfo.channelSubscriberCount,
+            videos: basicInfo.channelVideosCount,
+            processingTime: channelData.processingTime,
+            dataSource: channelData.dataSource,
+        });
+        
+    } catch (error) {
+        log.error(`Failed to process ${request.url}: ${error.message}`);
+        
+        // Take screenshot for debugging
+        try {
+            await utils.saveSnapshot(page, `ERROR-${request.id}-${Date.now()}`);
+        } catch (screenshotError) {
+            log.debug('Failed to save error screenshot:', screenshotError.message);
+        }
+        
+        throw error;
+    }
 };
+
+export default handlePageFunction;
