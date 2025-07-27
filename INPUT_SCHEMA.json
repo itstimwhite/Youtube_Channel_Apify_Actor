@@ -1,92 +1,112 @@
 {
-  "title": "Input schema for the youtube-channel-apify-actor actor",
-  "description": "This actor accepts YouTube channel URLs and returns details from their corresponding 'about' pages.",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "YouTube Channel Scraper Input",
+  "description": "Configure the YouTube Channel Scraper to extract channel information and social media links",
   "type": "object",
   "schemaVersion": 1,
+  "required": [],
   "properties": {
+    "startUrls": {
+      "title": "Channel URLs",
+      "type": "array",
+      "editor": "requestListSources",
+      "description": "List of YouTube channel URLs to scrape. Supports both @username and /channel/ID formats",
+      "prefill": [
+        {
+          "url": "https://www.youtube.com/@Fireship"
+        }
+      ],
+      "default": [],
+      "sectionCaption": "Direct Channel URLs",
+      "sectionDescription": "Provide YouTube channel URLs to scrape"
+    },
     "keywords": {
       "title": "Search Keywords",
       "type": "array",
-      "description": "Provide some keywords for Youtube channel search.",
-      "prefill": ["reactjs"],
-      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "description": "Search for channels by keywords (alternative to providing direct URLs). Note: May have limitations due to YouTube search API changes",
       "editor": "stringList",
-      "sectionCaption": "Search Keywords"
+      "default": [],
+      "sectionCaption": "Search Keywords",
+      "sectionDescription": "Find channels by searching YouTube"
     },
     "limit": {
       "title": "Search Results Limit",
       "type": "integer",
-      "description": "Search results limit for each search keyword.",
+      "description": "Maximum number of channels to return per keyword search",
+      "minimum": 1,
+      "maximum": 50,
       "default": 5,
-      "sectionCaption": "Crawl Limits",
-      "sectionDescription": "Limit the number of results from the scraper",
+      "prefill": 5,
       "editor": "number",
-      "prefill": 5
+      "sectionCaption": "Result Limits",
+      "sectionDescription": "Control how many results to return"
     },
     "maxRequestsPerCrawl": {
-      "title": "Max Requests Per Crawl",
+      "title": "Max Total Requests",
       "type": "integer",
-      "description": "Maximum number of pages that the crawler will open. The crawl will stop when this limit is reached.",
-      "editor": "number",
+      "description": "Maximum total number of pages to process in this run",
+      "minimum": 1,
+      "default": 100,
       "prefill": 100,
-      "nullable": true
-    },
-    "startUrls": {
-      "title": "Direct URLs",
-      "type": "array",
-      "description": "Provide some direct Youtube channel urls.",
-      "prefill": [
-        {
-          "url": "https://www.youtube.com/c/SydneySerena/"
-        }
-      ],
-      "default": [],
-      "editor": "requestListSources",
-      "sectionCaption": "Direct URLs"
+      "nullable": true,
+      "editor": "number"
     },
     "requestHandlerTimeoutSecs": {
-      "title": "Handle Page Timeout Secs",
+      "title": "Page Load Timeout (seconds)",
       "type": "integer",
-      "description": "Timeout in which the function passed as handlePageFunction needs to finish, in seconds.",
-      "prefill": 30,
+      "description": "Maximum time to wait for each channel page to load",
+      "minimum": 10,
+      "maximum": 300,
       "default": 30,
+      "prefill": 30,
       "editor": "number",
-      "sectionCaption": "Advanced settings"
+      "sectionCaption": "Advanced Settings",
+      "sectionDescription": "Fine-tune crawler performance"
     },
     "maxRequestRetries": {
       "title": "Max Request Retries",
       "type": "integer",
-      "description": "Indicates how many times the request is retried if BasicCrawlerOptions.handleRequestFunction fails.",
+      "description": "Number of times to retry failed requests before giving up",
+      "minimum": 0,
+      "maximum": 10,
       "default": 3,
-      "editor": "number",
-      "prefill": 3
+      "prefill": 3,
+      "editor": "number"
     },
     "minConcurrency": {
-      "title": "Min Concurrency",
+      "title": "Min Concurrent Requests",
       "type": "integer",
-      "description": "Sets the minimum concurrency (parallelism) for the crawl. Shortcut to the corresponding AutoscaledPool option.",
-      "prefill": 1,
+      "description": "Minimum number of pages to process in parallel",
+      "minimum": 1,
+      "maximum": 10,
       "default": 1,
+      "prefill": 1,
       "editor": "number"
     },
     "maxConcurrency": {
-      "title": "Max Concurrency",
+      "title": "Max Concurrent Requests",
       "type": "integer",
-      "description": "Sets the maximum concurrency (parallelism) for the crawl. Shortcut to the corresponding AutoscaledPool option.",
-      "prefill": 100,
-      "default": 100,
+      "description": "Maximum number of pages to process in parallel. Higher values are faster but may trigger rate limits",
+      "minimum": 1,
+      "maximum": 10,
+      "default": 2,
+      "prefill": 2,
       "editor": "number"
     },
     "proxyConfiguration": {
       "title": "Proxy Configuration",
       "type": "object",
-      "description": "Select proxies to be used by your crawler.",
+      "description": "Use Apify Proxy or custom proxies to avoid rate limiting and blocks. Recommended for reliable scraping.",
       "prefill": {
-        "useApifyProxy": true
+        "useApifyProxy": true,
+        "apifyProxyGroups": ["RESIDENTIAL"]
       },
       "editor": "proxy",
-      "sectionCaption": "Proxy and browser configuration"
+      "sectionCaption": "Proxy Configuration",
+      "sectionDescription": "Configure proxies for reliable scraping"
     }
-  },
-  "required": []
+  }
 }

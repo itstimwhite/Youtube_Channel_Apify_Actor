@@ -1,0 +1,230 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "YouTube Channel Scraper Output",
+  "description": "Output data schema for YouTube Channel Apify Actor",
+  "type": "object",
+  "properties": {
+    "channelURL": {
+      "type": "string",
+      "format": "uri",
+      "description": "The YouTube channel URL",
+      "example": "https://www.youtube.com/@Fireship"
+    },
+    "channelName": {
+      "type": "string",
+      "description": "The name of the YouTube channel",
+      "example": "Fireship"
+    },
+    "channelSubscriberCount": {
+      "type": "integer",
+      "description": "Number of channel subscribers (Note: Currently returns 0 due to YouTube's dynamic loading)",
+      "example": 2840000
+    },
+    "channelVideosCount": {
+      "type": "integer",
+      "description": "Total number of videos on the channel",
+      "example": 742
+    },
+    "joinedDate": {
+      "type": "string",
+      "description": "Date when the channel was created",
+      "example": "Jan 15, 2017"
+    },
+    "totalViewCount": {
+      "type": "integer",
+      "description": "Total views across all channel videos",
+      "example": 245678910
+    },
+    "channelLocation": {
+      "type": "string",
+      "description": "Geographic location of the channel (if provided)",
+      "example": "United States"
+    },
+    "channelDescription": {
+      "type": "string",
+      "description": "Channel's about section description",
+      "example": "High-intensity code tutorials and tech news..."
+    },
+    "channelProfileImageURL": {
+      "type": "string",
+      "format": "uri",
+      "description": "URL of the channel's profile image/avatar"
+    },
+    "channelEmail": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "email"
+      },
+      "description": "Email addresses found in channel description"
+    },
+    "channelPhone": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Phone numbers found in channel description"
+    },
+    "youtubeUrls": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      },
+      "description": "All YouTube URLs found on the channel page"
+    },
+    "instagramUrls": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      },
+      "description": "Instagram profile URLs linked from the channel"
+    },
+    "twitterUrls": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      },
+      "description": "Twitter/X profile URLs linked from the channel"
+    },
+    "facebookUrls": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      },
+      "description": "Facebook page/profile URLs linked from the channel"
+    },
+    "linkedinUrls": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      },
+      "description": "LinkedIn profile URLs linked from the channel"
+    },
+    "pinterestUrls": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      },
+      "description": "Pinterest profile URLs linked from the channel"
+    },
+    "redditUrls": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      },
+      "description": "Reddit profile/subreddit URLs linked from the channel"
+    },
+    "tumblrUrls": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      },
+      "description": "Tumblr blog URLs linked from the channel"
+    },
+    "twitchUrls": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      },
+      "description": "Twitch channel URLs linked from the channel"
+    },
+    "onlyfansUrls": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      },
+      "description": "OnlyFans profile URLs linked from the channel"
+    },
+    "soundcloudUrls": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      },
+      "description": "SoundCloud profile URLs linked from the channel"
+    },
+    "discordUrls": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      },
+      "description": "Discord server invite URLs linked from the channel"
+    },
+    "patreonUrls": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      },
+      "description": "Patreon page URLs linked from the channel"
+    },
+    "githubUrls": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      },
+      "description": "GitHub profile/organization URLs linked from the channel"
+    },
+    "tiktokUrls": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      },
+      "description": "TikTok profile URLs linked from the channel"
+    },
+    "spotifyUrls": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      },
+      "description": "Spotify artist/profile URLs linked from the channel"
+    },
+    "websiteUrls": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      },
+      "description": "General website URLs (non-social media) linked from the channel"
+    },
+    "verifiedCategory": {
+      "type": ["string", "null"],
+      "description": "Channel verification status (e.g., 'Verified', 'Official Artist Channel')",
+      "enum": ["Verified", "Official Artist Channel", "Music", null]
+    },
+    "scrapedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when the data was scraped"
+    },
+    "processingTime": {
+      "type": "integer",
+      "description": "Time taken to scrape the channel in milliseconds"
+    },
+    "dataSource": {
+      "type": "string",
+      "description": "Source of the extracted data",
+      "enum": ["ytInitialData", "DOM"]
+    }
+  },
+  "required": [
+    "channelURL",
+    "channelName",
+    "scrapedAt"
+  ],
+  "additionalProperties": false
+}
