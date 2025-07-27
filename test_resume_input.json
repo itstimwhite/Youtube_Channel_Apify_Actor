@@ -1,0 +1,8 @@
+{
+  "csvContent": "channel_url\nhttps://www.youtube.com/@MrBeast\n@PewDiePie\nhttps://www.youtube.com/@Markiplier\n@TechWithTim\n@Fireship",
+  "resumeFromChannel": "Markiplier",
+  "maxChannelsPerRun": 5,
+  "savePartialResults": true,
+  "maxConcurrency": 1,
+  "requestHandlerTimeoutSecs": 20
+}

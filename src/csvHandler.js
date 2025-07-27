@@ -1,6 +1,9 @@
 /**
- * CSV Handler for YouTube Channel Scraper
- * Handles CSV file parsing and channel URL extraction
+ * Batch Import Handler for YouTube Channel Scraper
+ * Handles multiple text formats for channel URL extraction:
+ * - Simple text files (one URL per line)
+ * - CSV files (with or without headers)
+ * - Tab-separated values (TSV)
  */
 
 import { log } from 'apify';
@@ -14,16 +17,6 @@ import { parse } from 'csv-parse/sync';
  */
 export function parseCSV(csvContent, options = {}) {
     try {
-        // Parse CSV with flexible options
-        const records = parse(csvContent, {
-            columns: true,  // Use first row as headers
-            skip_empty_lines: true,
-            trim: true,
-            relax_column_count: true,
-            skip_records_with_error: true,
-            ...options
-        });
-        
         const channelUrls = [];
         const urlPatterns = [
             /youtube\.com\/@[\w-]+/i,
@@ -32,46 +25,147 @@ export function parseCSV(csvContent, options = {}) {
             /youtube\.com\/user\/[\w-]+/i
         ];
         
-        // Extract URLs from each record
-        records.forEach((record, index) => {
-            // Look for YouTube URLs in any column
-            Object.values(record).forEach(value => {
-                if (typeof value === 'string') {
+        // First, try to detect if this is a simple text file (one URL per line)
+        const lines = csvContent.trim().split('\n').map(line => line.trim());
+        const isSimpleTextFile = lines.every(line => {
+            // Check if each line is either empty or contains a single URL/username
+            if (!line) return true;
+            const hasComma = line.includes(',');
+            const hasTab = line.includes('\t');
+            return !hasComma && !hasTab;
+        });
+        
+        if (isSimpleTextFile) {
+            // Handle simple text file format (one URL per line)
+            log.info('Detected simple text file format');
+            lines.forEach((line, index) => {
+                if (line) {
                     // Direct URL match
-                    if (urlPatterns.some(pattern => pattern.test(value))) {
+                    if (urlPatterns.some(pattern => pattern.test(line))) {
                         channelUrls.push({
-                            url: normalizeChannelUrl(value),
+                            url: normalizeChannelUrl(line),
                             metadata: { 
-                                row: index + 2, // +2 because of header row and 0-index
-                                source: 'csv'
+                                row: index + 1,
+                                source: 'text'
                             }
                         });
                     }
                     // Handle @username format
-                    else if (value.startsWith('@') && !value.includes(' ')) {
+                    else if (line.startsWith('@') && !line.includes(' ')) {
                         channelUrls.push({
-                            url: `https://www.youtube.com/${value}`,
+                            url: `https://www.youtube.com/${line}`,
                             metadata: { 
-                                row: index + 2,
-                                source: 'csv'
+                                row: index + 1,
+                                source: 'text'
                             }
                         });
                     }
                 }
             });
-        });
+        } else {
+            // Try to parse as CSV
+            // Detect delimiter
+            const firstLine = lines[0];
+            const delimiter = firstLine.includes('\t') ? '\t' : ',';
+            
+            // First attempt: with headers
+            let records;
+            try {
+                records = parse(csvContent, {
+                    columns: true,  // Use first row as headers
+                    skip_empty_lines: true,
+                    trim: true,
+                    relax_column_count: true,
+                    skip_records_with_error: true,
+                    delimiter: delimiter,
+                    ...options
+                });
+            } catch (e) {
+                // If parsing with headers fails, try without headers
+                records = parse(csvContent, {
+                    columns: false,  // No headers
+                    skip_empty_lines: true,
+                    trim: true,
+                    relax_column_count: true,
+                    skip_records_with_error: true,
+                    delimiter: delimiter,
+                    ...options
+                });
+            }
+            
+            // Check if first row contains URLs (indicating no headers)
+            const hasUrlInFirstLine = urlPatterns.some(pattern => pattern.test(firstLine)) || 
+                                       (firstLine.includes('@') && firstLine.split(',')[0].trim().startsWith('@'));
+            
+            // If we're parsing without headers or first line has URLs, process it
+            if (hasUrlInFirstLine) {
+                // Detect delimiter (comma or tab)
+                const delimiter = firstLine.includes('\t') ? '\t' : ',';
+                const firstLineValues = firstLine.split(delimiter).map(v => v.trim());
+                firstLineValues.forEach(value => {
+                    if (urlPatterns.some(pattern => pattern.test(value))) {
+                        channelUrls.push({
+                            url: normalizeChannelUrl(value),
+                            metadata: { 
+                                row: 1,
+                                source: 'csv'
+                            }
+                        });
+                    } else if (value.startsWith('@') && !value.includes(' ')) {
+                        channelUrls.push({
+                            url: `https://www.youtube.com/${value}`,
+                            metadata: { 
+                                row: 1,
+                                source: 'csv'
+                            }
+                        });
+                    }
+                });
+            }
+            
+            // Process remaining records
+            records.forEach((record, index) => {
+                const rowIndex = hasUrlInFirstLine ? index + 2 : index + 2;
+                const values = Array.isArray(record) ? record : Object.values(record);
+                
+                values.forEach(value => {
+                    if (typeof value === 'string' && value) {
+                        // Direct URL match
+                        if (urlPatterns.some(pattern => pattern.test(value))) {
+                            channelUrls.push({
+                                url: normalizeChannelUrl(value),
+                                metadata: { 
+                                    row: rowIndex,
+                                    source: 'csv'
+                                }
+                            });
+                        }
+                        // Handle @username format
+                        else if (value.startsWith('@') && !value.includes(' ')) {
+                            channelUrls.push({
+                                url: `https://www.youtube.com/${value}`,
+                                metadata: { 
+                                    row: rowIndex,
+                                    source: 'csv'
+                                }
+                            });
+                        }
+                    }
+                });
+            });
+        }
         
         // Remove duplicates
         const uniqueUrls = Array.from(
             new Map(channelUrls.map(item => [item.url, item])).values()
         );
         
-        log.info(`Parsed ${records.length} CSV rows, found ${uniqueUrls.length} unique channel URLs`);
+        log.info(`Processed ${lines.length} lines, found ${uniqueUrls.length} unique channel URLs`);
         return uniqueUrls;
         
     } catch (error) {
-        log.error('Failed to parse CSV:', error.message);
-        throw new Error(`CSV parsing failed: ${error.message}`);
+        log.error('Failed to parse input:', error.message);
+        throw new Error(`Parsing failed: ${error.message}`);
     }
 }
 

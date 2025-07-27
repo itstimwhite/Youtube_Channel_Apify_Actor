@@ -3,6 +3,9 @@ import { PuppeteerCrawler, RequestList, RequestQueue, ProxyConfiguration } from 
 import ytsr from 'ytsr';
 import handlePageFunction from './src/handlePageFunction.js';
 import { parseCSV } from './src/csvHandler.js';
+import { withRetryHandler } from './src/retryHandler.js';
+import { AdaptiveRateLimiter, createRateLimitHook, createRateLimitRecorder } from './src/rateLimiter.js';
+import { validateInput, logValidationResults } from './src/inputValidator.js';
 
 /**
  * Searches YouTube for channels based on keywords
@@ -123,13 +126,13 @@ Actor.main(async () => {
     log.info('Debug mode: Checking subscriber count extraction');
     
     // Get and validate input
-    let input = await Actor.getInput();
-    log.debug('Raw input received:', input);
+    let rawInput = await Actor.getInput();
+    log.debug('Raw input received:', rawInput);
     
-    if (!input) {
+    if (!rawInput) {
         log.warning('No input provided. Using default configuration.');
         // Use empty defaults if no input provided
-        input = {
+        rawInput = {
             keywords: [],
             startUrls: [],
             limit: 5,
@@ -138,6 +141,16 @@ Actor.main(async () => {
             maxConcurrency: 1
         };
     }
+    
+    // Validate and sanitize input
+    const validation = validateInput(rawInput);
+    logValidationResults(validation);
+    
+    if (!validation.valid) {
+        throw new Error(`Invalid input configuration: ${validation.errors.join(', ')}`);
+    }
+    
+    const input = validation.sanitizedInput;
     
     // Destructure input with defaults
     const {
@@ -232,28 +245,51 @@ Actor.main(async () => {
         const queueInfo = await requestQueue.getInfo();
         const totalCount = queueInfo?.totalRequestCount || allChannelUrls.length;
         
+        // Initialize rate limiter
+        const rateLimiter = new AdaptiveRateLimiter({
+            minDelay: 1000,  // Minimum 1 second between requests
+            maxDelay: 15000, // Maximum 15 seconds between requests
+            targetSuccessRate: 0.95,
+            windowSize: 100
+        });
+        
+        const recordRateLimit = createRateLimitRecorder(rateLimiter);
+        
         // Create and configure crawler
         const crawler = new PuppeteerCrawler({
             requestQueue,
-            requestHandler: async (context) => {
-                // Call the original handler
-                await handlePageFunction(context);
+            requestHandler: withRetryHandler(async (context) => {
+                const startTime = Date.now();
+                let success = false;
                 
-                // Update progress
-                processedCount++;
-                const progress = Math.round((processedCount / totalCount) * 100);
-                log.info(`Progress: ${processedCount}/${totalCount} channels (${progress}%)`);
-                
-                // Save progress state for resume capability
-                if (savePartialResults && processedCount % 10 === 0) {
-                    await Actor.setValue('PROGRESS_STATE', {
-                        processedCount,
-                        totalCount,
-                        lastProcessedUrl: context.request.url,
-                        timestamp: new Date().toISOString()
-                    });
+                try {
+                    // Call the original handler
+                    await handlePageFunction(context);
+                    success = true;
+                    
+                    // Update progress
+                    processedCount++;
+                    const progress = Math.round((processedCount / totalCount) * 100);
+                    log.info(`Progress: ${processedCount}/${totalCount} channels (${progress}%)`);
+                    
+                    // Save progress state for resume capability - more frequent saves
+                    if (savePartialResults && processedCount % 5 === 0) {
+                        await Actor.setValue('PROGRESS_STATE', {
+                            processedCount,
+                            totalCount,
+                            lastProcessedUrl: context.request.url,
+                            timestamp: new Date().toISOString(),
+                            rateLimiterMetrics: rateLimiter.getMetrics()
+                        });
+                    }
+                } finally {
+                    // Record request for rate limiting
+                    const responseTime = Date.now() - startTime;
+                    const statusCode = context.response?.status() || 0;
+                    const rateLimited = statusCode === 429;
+                    recordRateLimit(success, responseTime, rateLimited);
                 }
-            },
+            }),
             
             // Timeouts and retries
             requestHandlerTimeoutSecs,
@@ -264,10 +300,12 @@ Actor.main(async () => {
             maxConcurrency,
             maxRequestsPerCrawl,
             
-            // Browser settings
+            // Browser settings - optimized for stability
             browserPoolOptions: { 
                 maxOpenPagesPerBrowser: 1,
-                retireBrowserAfterPageCount: 10
+                retireBrowserAfterPageCount: 5,  // More frequent browser recycling to prevent memory leaks
+                operationTimeoutSecs: 60,
+                closeInactiveBrowserAfterSecs: 120
             },
             
             // Session pool for handling failures
@@ -283,13 +321,26 @@ Actor.main(async () => {
             ...(proxyConfig && { proxyConfiguration: proxyConfig }),
             
             // Pre-navigation hooks
-            preNavigationHooks: [createResourceBlocker()],
+            preNavigationHooks: [
+                createResourceBlocker(),
+                createRateLimitHook(rateLimiter)
+            ],
             
-            // Launch options
+            
+            // Launch options - optimized for stability and performance
             launchContext: {
                 launchOptions: {
                     headless: true,
-                    args: ['--no-sandbox', '--disable-setuid-sandbox']
+                    args: [
+                        '--no-sandbox',
+                        '--disable-setuid-sandbox',
+                        '--disable-dev-shm-usage', // Use /tmp instead of /dev/shm
+                        '--disable-gpu',
+                        '--disable-web-security',
+                        '--disable-features=IsolateOrigins,site-per-process',
+                        '--disable-blink-features=AutomationControlled',
+                        '--window-size=1920,1080'
+                    ]
                 }
             }
         });

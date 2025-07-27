@@ -109,12 +109,12 @@
       "sectionDescription": "Configure proxies for reliable scraping"
     },
     "csvContent": {
-      "title": "CSV Content",
+      "title": "Batch Import Content",
       "type": "string",
-      "description": "Paste CSV content with YouTube channel URLs. Format: channel_url,channel_name,notes (header optional)",
+      "description": "Paste your list of YouTube channel URLs in any of these formats:\n• Simple text: One URL per line (e.g., https://youtube.com/@MrBeast or @MrBeast)\n• CSV with headers: channel_url,channel_name,notes\n• CSV without headers: URL in first column\n• Tab-separated values: URL[TAB]name[TAB]notes",
       "editor": "textarea",
       "sectionCaption": "Batch Import",
-      "sectionDescription": "Import multiple channels from CSV content"
+      "sectionDescription": "Import multiple channels from text, CSV, or TSV format"
     },
     "maxChannelsPerRun": {
       "title": "Max Channels Per Run",
