@@ -2,8 +2,7 @@ import { Actor, log } from 'apify';
 import { PuppeteerCrawler, RequestList, RequestQueue, ProxyConfiguration } from 'crawlee';
 import ytsr from 'ytsr';
 import handlePageFunction from './src/handlePageFunction.js';
-import { parseCSV, validateCSV } from './src/csvHandler.js';
-import { parseExcel, validateExcel } from './src/excelHandler.js';
+import { parseCSV } from './src/csvHandler.js';
 
 /**
  * Searches YouTube for channels based on keywords
@@ -151,8 +150,7 @@ Actor.main(async () => {
         maxConcurrency = 1,
         maxRequestsPerCrawl = 100,
         proxyConfiguration,
-        csvFile,
-        excelFile,
+        csvContent,
         maxChannelsPerRun = 1000,
         savePartialResults = true,
         resumeFromChannel
@@ -176,33 +174,15 @@ Actor.main(async () => {
         // Search for channels if keywords provided
         let allChannelUrls = [...startUrls];
         
-        // Process CSV file if provided
-        if (csvFile) {
-            log.info('Processing CSV file...');
+        // Process CSV content if provided
+        if (csvContent) {
+            log.info('Processing CSV content...');
             try {
-                const csvContent = await Actor.getValue(csvFile);
-                if (csvContent) {
-                    const csvUrls = parseCSV(csvContent.toString());
-                    allChannelUrls.push(...csvUrls);
-                    log.info(`Added ${csvUrls.length} channels from CSV file`);
-                }
+                const csvUrls = parseCSV(csvContent);
+                allChannelUrls.push(...csvUrls);
+                log.info(`Added ${csvUrls.length} channels from CSV`);
             } catch (error) {
-                log.error('Failed to process CSV file:', error.message);
-            }
-        }
-        
-        // Process Excel file if provided
-        if (excelFile) {
-            log.info('Processing Excel file...');
-            try {
-                const excelBuffer = await Actor.getValue(excelFile);
-                if (excelBuffer) {
-                    const excelUrls = parseExcel(excelBuffer);
-                    allChannelUrls.push(...excelUrls);
-                    log.info(`Added ${excelUrls.length} channels from Excel file`);
-                }
-            } catch (error) {
-                log.error('Failed to process Excel file:', error.message);
+                log.error('Failed to process CSV content:', error.message);
             }
         }
         
@@ -249,7 +229,8 @@ Actor.main(async () => {
         
         // Set up progress tracking
         let processedCount = 0;
-        const totalCount = await requestQueue.getInfo().then(info => info.totalRequestCount);
+        const queueInfo = await requestQueue.getInfo();
+        const totalCount = queueInfo?.totalRequestCount || allChannelUrls.length;
         
         // Create and configure crawler
         const crawler = new PuppeteerCrawler({
@@ -319,19 +300,20 @@ Actor.main(async () => {
         
         // Log completion message with summary
         const dataset = await Actor.openDataset();
-        const { items } = await dataset.getInfo();
+        const datasetInfo = await dataset.getInfo();
+        const itemCount = datasetInfo?.itemCount || 0;
         
         log.info('='.repeat(50));
         log.info('SCRAPING COMPLETED!');
         log.info(`Total channels processed: ${processedCount}`);
-        log.info(`Total results saved: ${items}`);
-        log.info(`Success rate: ${Math.round((items / processedCount) * 100)}%`);
+        log.info(`Total results saved: ${itemCount}`);
+        log.info(`Success rate: ${processedCount > 0 ? Math.round((itemCount / processedCount) * 100) : 0}%`);
         
         // Save final state
         await Actor.setValue('FINAL_STATE', {
             processedCount,
             totalCount,
-            successCount: items,
+            successCount: itemCount,
             completedAt: new Date().toISOString()
         });
         

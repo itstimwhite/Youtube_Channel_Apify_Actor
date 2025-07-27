@@ -108,19 +108,13 @@
       "sectionCaption": "Proxy Configuration",
       "sectionDescription": "Configure proxies for reliable scraping"
     },
-    "csvFile": {
-      "title": "CSV File Import",
+    "csvContent": {
+      "title": "CSV Content",
       "type": "string",
-      "description": "Upload a CSV file containing YouTube channel URLs. The file should have channel URLs in any column.",
-      "editor": "file",
+      "description": "Paste CSV content with YouTube channel URLs. Format: channel_url,channel_name,notes (header optional)",
+      "editor": "textarea",
       "sectionCaption": "Batch Import",
-      "sectionDescription": "Import multiple channels from CSV or Excel files"
-    },
-    "excelFile": {
-      "title": "Excel File Import",
-      "type": "string",
-      "description": "Upload an Excel file (.xlsx) containing YouTube channel URLs. The file should have channel URLs in any column.",
-      "editor": "file"
+      "sectionDescription": "Import multiple channels from CSV content"
     },
     "maxChannelsPerRun": {
       "title": "Max Channels Per Run",
