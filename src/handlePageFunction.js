@@ -15,6 +15,12 @@ import * as utils from './utility.js';
  */
 async function extractYouTubeData(page) {
     try {
+        // Wait a bit for dynamic content to load
+        await page.waitForFunction(
+            () => window.ytInitialData && Object.keys(window.ytInitialData).length > 0,
+            { timeout: constants.TIMEOUTS.DYNAMIC_CONTENT }
+        ).catch(() => null);
+        
         const ytData = await page.evaluate(() => {
             // Try multiple possible locations for YouTube's data
             return window.ytInitialData || 
@@ -64,15 +70,28 @@ function extractChannelMetadata(ytData) {
                                      header.subscriberCountText?.runs?.[0]?.text ||
                                      '';
             
+            // Debug: Log what we found
+            log.info('Extracted from ytInitialData:', {
+                subscriberCountText: header.subscriberCountText,
+                videosCountText: header.videosCountText,
+                subscriberCount: metadata.subscriberCount,
+                videoCount: metadata.videoCount,
+                channelName: metadata.channelName
+            });
+            
             // Extract video count
             metadata.videoCount = header.videosCountText?.runs?.[0]?.text || 
                                 header.videosCount?.simpleText ||
                                 '';
         }
         
-        // Try to find about page data
+        // Try to find about page data - handle both main page and about page
         const tabs = ytData?.contents?.twoColumnBrowseResultsRenderer?.tabs || [];
-        const aboutTab = tabs.find(tab => tab?.tabRenderer?.title === 'About' || tab?.tabRenderer?.selected);
+        const aboutTab = tabs.find(tab => 
+            tab?.tabRenderer?.title === 'About' || 
+            tab?.tabRenderer?.content?.sectionListRenderer ||
+            tab?.tabRenderer?.selected
+        );
         
         if (aboutTab) {
             const aboutData = aboutTab?.tabRenderer?.content?.sectionListRenderer?.contents?.[0]
@@ -180,7 +199,31 @@ async function waitForContent(page) {
         ]);
         
         // Additional wait for dynamic content
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        
+        // Try to trigger lazy loading by scrolling
+        await page.evaluate(() => {
+            window.scrollBy(0, 500);
+        });
+        
+        // Wait a bit more after scroll
         await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Wait for any formatted string that might contain subscriber info
+        await page.waitForFunction(
+            () => {
+                const elements = document.querySelectorAll('yt-formatted-string');
+                for (const el of elements) {
+                    if (el.textContent && el.textContent.includes('subscriber')) {
+                        return true;
+                    }
+                }
+                return false;
+            },
+            { timeout: 10000 }
+        ).catch(() => {
+            log.debug('No subscriber text found after waiting');
+        });
     } catch (error) {
         log.warning('Timeout waiting for content to load');
     }
@@ -202,10 +245,41 @@ async function extractBasicInfo(page, ytData) {
             .then(name => name || metadata.channelName)
             .catch(() => metadata.channelName),
         
-        // Subscriber count
-        utils.getDataFromSelector(page, constants.CSS_SELECTORS.SUBSCRIBER_COUNT, 'innerText', 3000)
-            .then(count => count || metadata.subscriberCount)
-            .catch(() => metadata.subscriberCount),
+        // Subscriber count - try to find it in the channel header
+        page.evaluate(() => {
+            // Look for subscriber count in channel header
+            const channelHeader = document.querySelector('#channel-header-container');
+            if (!channelHeader) return null;
+            
+            // Find all yt-formatted-string elements in the header
+            const formattedStrings = channelHeader.querySelectorAll('yt-formatted-string');
+            for (const elem of formattedStrings) {
+                const text = elem.textContent || '';
+                // Check if this contains subscriber info
+                if (text.includes('subscriber') && text.match(/[0-9]/)) {
+                    return text.trim();
+                }
+            }
+            
+            // Alternative: look for any element with subscriber in class/id
+            const subscriberElements = document.querySelectorAll('[id*="subscriber"], [class*="subscriber"]');
+            for (const elem of subscriberElements) {
+                const text = elem.textContent || '';
+                if (text.match(/[0-9].*subscriber/i)) {
+                    return text.trim();
+                }
+            }
+            
+            return null;
+        })
+            .then(count => {
+                log.info('Subscriber count from DOM search:', count);
+                return count || metadata.subscriberCount;
+            })
+            .catch((error) => {
+                log.debug('Failed to get subscriber count from DOM:', error.message);
+                return metadata.subscriberCount;
+            }),
         
         // Avatar image
         utils.getDataFromSelector(page, constants.CSS_SELECTORS.AVATAR_IMAGE, 'src', 3000)
@@ -221,10 +295,27 @@ async function extractBasicInfo(page, ytData) {
                           'Unknown Channel';
     }
     
+    // Try to get video count from the page
+    const videoCount = await page.evaluate(() => {
+        // Look for video count in tabs
+        const tabs = document.querySelectorAll('yt-tab-shape, tp-yt-paper-tab');
+        for (const tab of tabs) {
+            const text = tab.textContent || '';
+            if (text.toLowerCase().includes('video')) {
+                // Extract number from text like "Videos 887"
+                const match = text.match(/([0-9,]+)/); 
+                if (match) return match[1];
+            }
+        }
+        return null;
+    }).catch(() => null);
+    
+    log.info('Video count from DOM:', videoCount);
+    
     return {
         channelName: cleanChannelName || 'Unknown Channel',
         channelSubscriberCount: subscriberCount ? utils.unformatNumbers(subscriberCount) : 0,
-        channelVideosCount: metadata.videoCount ? utils.unformatNumbers(metadata.videoCount) : 0,
+        channelVideosCount: videoCount ? utils.unformatNumbers(videoCount) : (metadata.videoCount ? utils.unformatNumbers(metadata.videoCount) : 0),
         channelProfileImageURL: avatarUrl || '',
         metadata // Include raw metadata for additional processing
     };
@@ -438,11 +529,73 @@ const handlePageFunction = async ({ page, request, session, response }) => {
         // Dismiss any upsell dialogs
         await dismissUpsellDialog(page);
         
+        // Handle cookie banner if present
+        await page.evaluate(() => {
+            // Look for cookie banner and reject/dismiss it
+            const cookieBanner = document.querySelector('tp-yt-paper-dialog');
+            if (cookieBanner) {
+                // Try to find reject all button
+                const buttons = cookieBanner.querySelectorAll('button, yt-button-renderer');
+                for (const button of buttons) {
+                    if (button.textContent?.toLowerCase().includes('reject') || 
+                        button.textContent?.toLowerCase().includes('deny')) {
+                        button.click();
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }).catch(() => null);
+        
         // Wait for content to load
         await waitForContent(page);
         
         // Extract YouTube's data object first
         const ytData = await extractYouTubeData(page);
+        
+        // Debug: Log the structure to understand what YouTube is returning
+        if (ytData?.header) {
+            log.debug('YouTube header structure:', {
+                headerType: Object.keys(ytData.header)[0],
+                headerKeys: ytData.header.c4TabbedHeaderRenderer ? Object.keys(ytData.header.c4TabbedHeaderRenderer) : 'No c4TabbedHeaderRenderer'
+            });
+        }
+        
+        // Debug: Take a screenshot to see what's on the page
+        await utils.saveSnapshot(page, `DEBUG-${request.id}`);
+        
+        // Debug: Check what's in the DOM
+        const debugInfo = await page.evaluate(() => {
+            // Look for all formatted strings in the header
+            const headerElements = document.querySelector('#channel-header-container');
+            const allTexts = [];
+            if (headerElements) {
+                const formattedStrings = headerElements.querySelectorAll('yt-formatted-string');
+                formattedStrings.forEach(el => {
+                    if (el.textContent) {
+                        allTexts.push({
+                            text: el.textContent.trim(),
+                            id: el.id || 'no-id',
+                            class: el.className || 'no-class'
+                        });
+                    }
+                });
+            }
+            
+            // Check tabs
+            const tabs = document.querySelectorAll('yt-tab-shape, tp-yt-paper-tab');
+            const tabTexts = [];
+            tabs.forEach(tab => {
+                tabTexts.push(tab.textContent?.trim() || '');
+            });
+            
+            return {
+                headerTexts: allTexts,
+                tabTexts: tabTexts,
+                pageTitle: document.title
+            };
+        });
+        log.info('Page debug info:', debugInfo);
         
         // Extract all data with fallback strategies
         const basicInfo = await extractBasicInfo(page, ytData);

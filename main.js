@@ -2,6 +2,8 @@ import { Actor, log } from 'apify';
 import { PuppeteerCrawler, RequestList, RequestQueue, ProxyConfiguration } from 'crawlee';
 import ytsr from 'ytsr';
 import handlePageFunction from './src/handlePageFunction.js';
+import { parseCSV, validateCSV } from './src/csvHandler.js';
+import { parseExcel, validateExcel } from './src/excelHandler.js';
 
 /**
  * Searches YouTube for channels based on keywords
@@ -45,8 +47,9 @@ async function prepareChannelUrls(requestList, requestQueue) {
     
     while ((request = await requestList.fetchNextRequest())) {
         const cleanUrl = request.url.replace(/\/+$/, '');
+        // Try main channel page instead of /about for better data availability
         await requestQueue.addRequest({ 
-            url: `${cleanUrl}/about`,
+            url: cleanUrl,
             userData: { channelUrl: cleanUrl }
         });
         count++;
@@ -117,7 +120,8 @@ function createResourceBlocker() {
  * Main actor function
  */
 Actor.main(async () => {
-    log.info('Starting YouTube Channel Scraper');
+    log.info('Starting YouTube Channel Scraper...');
+    log.info('Debug mode: Checking subscriber count extraction');
     
     // Get and validate input
     let input = await Actor.getInput();
@@ -146,7 +150,12 @@ Actor.main(async () => {
         minConcurrency = 1,
         maxConcurrency = 1,
         maxRequestsPerCrawl = 100,
-        proxyConfiguration
+        proxyConfiguration,
+        csvFile,
+        excelFile,
+        maxChannelsPerRun = 1000,
+        savePartialResults = true,
+        resumeFromChannel
     } = input;
     
     // Configure logging level
@@ -166,14 +175,63 @@ Actor.main(async () => {
     try {
         // Search for channels if keywords provided
         let allChannelUrls = [...startUrls];
+        
+        // Process CSV file if provided
+        if (csvFile) {
+            log.info('Processing CSV file...');
+            try {
+                const csvContent = await Actor.getValue(csvFile);
+                if (csvContent) {
+                    const csvUrls = parseCSV(csvContent.toString());
+                    allChannelUrls.push(...csvUrls);
+                    log.info(`Added ${csvUrls.length} channels from CSV file`);
+                }
+            } catch (error) {
+                log.error('Failed to process CSV file:', error.message);
+            }
+        }
+        
+        // Process Excel file if provided
+        if (excelFile) {
+            log.info('Processing Excel file...');
+            try {
+                const excelBuffer = await Actor.getValue(excelFile);
+                if (excelBuffer) {
+                    const excelUrls = parseExcel(excelBuffer);
+                    allChannelUrls.push(...excelUrls);
+                    log.info(`Added ${excelUrls.length} channels from Excel file`);
+                }
+            } catch (error) {
+                log.error('Failed to process Excel file:', error.message);
+            }
+        }
+        
+        // Search for channels if keywords provided
         if (keywords.length > 0) {
             const searchResults = await searchChannels(keywords, limit, allChannelUrls);
             allChannelUrls.push(...searchResults);
         }
         
         if (allChannelUrls.length === 0) {
-            log.warning('No channel URLs to process. Please provide keywords or start URLs.');
+            log.warning('No channel URLs to process. Please provide keywords, start URLs, or import a file.');
             return;
+        }
+        
+        // Apply max channels limit
+        if (allChannelUrls.length > maxChannelsPerRun) {
+            log.warning(`Found ${allChannelUrls.length} channels, limiting to ${maxChannelsPerRun}`);
+            allChannelUrls = allChannelUrls.slice(0, maxChannelsPerRun);
+        }
+        
+        // Handle resume functionality
+        if (resumeFromChannel) {
+            const resumeIndex = allChannelUrls.findIndex(item => 
+                (typeof item === 'string' ? item : item.url).includes(resumeFromChannel)
+            );
+            if (resumeIndex > 0) {
+                log.info(`Resuming from channel: ${resumeFromChannel} (skipping ${resumeIndex} channels)`);
+                allChannelUrls = allChannelUrls.slice(resumeIndex);
+            }
         }
         
         // Initialize request management
@@ -189,10 +247,32 @@ Actor.main(async () => {
             log.info('Proxy configuration enabled');
         }
         
+        // Set up progress tracking
+        let processedCount = 0;
+        const totalCount = await requestQueue.getInfo().then(info => info.totalRequestCount);
+        
         // Create and configure crawler
         const crawler = new PuppeteerCrawler({
             requestQueue,
-            requestHandler: handlePageFunction,
+            requestHandler: async (context) => {
+                // Call the original handler
+                await handlePageFunction(context);
+                
+                // Update progress
+                processedCount++;
+                const progress = Math.round((processedCount / totalCount) * 100);
+                log.info(`Progress: ${processedCount}/${totalCount} channels (${progress}%)`);
+                
+                // Save progress state for resume capability
+                if (savePartialResults && processedCount % 10 === 0) {
+                    await Actor.setValue('PROGRESS_STATE', {
+                        processedCount,
+                        totalCount,
+                        lastProcessedUrl: context.request.url,
+                        timestamp: new Date().toISOString()
+                    });
+                }
+            },
             
             // Timeouts and retries
             requestHandlerTimeoutSecs,
@@ -237,8 +317,25 @@ Actor.main(async () => {
         log.info('Starting crawler...');
         await crawler.run();
         
-        // Log completion message
-        log.info('Crawl completed successfully!');
+        // Log completion message with summary
+        const dataset = await Actor.openDataset();
+        const { items } = await dataset.getInfo();
+        
+        log.info('='.repeat(50));
+        log.info('SCRAPING COMPLETED!');
+        log.info(`Total channels processed: ${processedCount}`);
+        log.info(`Total results saved: ${items}`);
+        log.info(`Success rate: ${Math.round((items / processedCount) * 100)}%`);
+        
+        // Save final state
+        await Actor.setValue('FINAL_STATE', {
+            processedCount,
+            totalCount,
+            successCount: items,
+            completedAt: new Date().toISOString()
+        });
+        
+        log.info('='.repeat(50));
         
     } catch (error) {
         log.error('Actor failed with error:', error);

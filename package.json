@@ -7,7 +7,9 @@
     "apify": "^3.3.0",
     "crawlee": "^3.13.0",
     "puppeteer": "^24.15.0",
-    "ytsr": "^3.8.4"
+    "ytsr": "^3.8.4",
+    "csv-parse": "^5.5.6",
+    "xlsx": "^0.18.5"
   },
   "scripts": {
     "start": "node main.js",

@@ -9,6 +9,11 @@ export const CSS_SELECTORS = {
     CHANNEL_NAME: 'yt-formatted-string.ytd-channel-name',
     CHANNEL_NAME_TEXT: '#text.ytd-channel-name',
     SUBSCRIBER_COUNT: '#owner-sub-count',
+    SUBSCRIBER_COUNT_MAIN: '#subscriber-count',
+    SUBSCRIBER_TEXT: 'yt-formatted-string#subscriber-count',
+    SUBSCRIBER_TEXT_ALT: 'yt-formatted-string.ytd-c4-tabbed-header-renderer',
+    SUBSCRIBER_CONTAINER: '#channel-header #channel-header-container yt-formatted-string',
+    VIDEO_COUNT_TAB: 'yt-tab-shape[tab-title="Videos"] .yt-tab-shape-wiz__tab-bar-entry-text',
     
     // Navigation and tabs
     VIDEOS_TAB: 'yt-tab-shape[tab-title="Videos"]',
@@ -153,7 +158,8 @@ export const TIMEOUTS = {
     CAPTCHA_CHECK: 5000,   // 5 seconds
     NAVIGATION: 30000,     // 30 seconds
     PAGE_LOAD: 60000,      // 1 minute
-    ELEMENT_WAIT: 5000,    // 5 seconds for individual elements
+    ELEMENT_WAIT: 10000,   // 10 seconds for individual elements - increased for dynamic content
+    DYNAMIC_CONTENT: 5000, // 5 seconds wait for JS-rendered content
 };
 
 // Error messages

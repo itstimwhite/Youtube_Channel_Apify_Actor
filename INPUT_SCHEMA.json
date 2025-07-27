@@ -107,6 +107,43 @@
       "editor": "proxy",
       "sectionCaption": "Proxy Configuration",
       "sectionDescription": "Configure proxies for reliable scraping"
+    },
+    "csvFile": {
+      "title": "CSV File Import",
+      "type": "string",
+      "description": "Upload a CSV file containing YouTube channel URLs. The file should have channel URLs in any column.",
+      "editor": "file",
+      "sectionCaption": "Batch Import",
+      "sectionDescription": "Import multiple channels from CSV or Excel files"
+    },
+    "excelFile": {
+      "title": "Excel File Import",
+      "type": "string",
+      "description": "Upload an Excel file (.xlsx) containing YouTube channel URLs. The file should have channel URLs in any column.",
+      "editor": "file"
+    },
+    "maxChannelsPerRun": {
+      "title": "Max Channels Per Run",
+      "type": "integer",
+      "description": "Maximum number of channels to process in a single run (useful for large batches)",
+      "minimum": 1,
+      "maximum": 10000,
+      "default": 1000,
+      "prefill": 1000,
+      "editor": "number"
+    },
+    "savePartialResults": {
+      "title": "Save Partial Results",
+      "type": "boolean",
+      "description": "Save results after each channel is scraped (useful for large runs that might fail)",
+      "default": true,
+      "prefill": true
+    },
+    "resumeFromChannel": {
+      "title": "Resume From Channel",
+      "type": "string",
+      "description": "Resume scraping from a specific channel URL (useful for continuing failed runs)",
+      "editor": "textfield"
     }
   }
 }

@@ -1,0 +1,9 @@
+{
+  "startUrls": [
+    {
+      "url": "https://www.youtube.com/@MrBeast"
+    }
+  ],
+  "maxConcurrency": 1,
+  "requestHandlerTimeoutSecs": 60
+}
